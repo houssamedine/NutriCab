@@ -75,6 +75,9 @@ public class PatientServiceImpl implements PatientService{
 
     @Override
     public List<PatientDto> searhPatient(String keyword) {
-        return List.of();
+        return patientRepository.findByFullNameContainingIgnoreCase(keyword)
+                .stream()
+                .map(PatientMapper::toDto)
+                .toList();
     }
 }

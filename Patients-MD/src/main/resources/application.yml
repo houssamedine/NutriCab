@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: Patients-MD
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/nutricab_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: root          # ou ton user MySQL
+    password:           # ou ton password MySQL
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.MySQLDialect
+
+server:
+  port: 8182
