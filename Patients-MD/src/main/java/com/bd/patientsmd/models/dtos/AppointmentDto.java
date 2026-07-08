@@ -1,4 +1,4 @@
 package com.bd.patientsmd.models.dtos;
 
-public record AppointmentsDto() {
+public record AppointmentDto() {
 }
