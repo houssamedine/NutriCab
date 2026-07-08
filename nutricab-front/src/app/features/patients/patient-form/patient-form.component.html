@@ -1,0 +1,28 @@
+<H2>Ajouter Un Patient</H2>
+<form [formGroup]="patientForm" (ngSubmit)="savePatient()">
+  <label>Nom complet</label>
+  <input type="text" formControlName="fullName">
+
+  <label>Date de naissance</label>
+  <input type="date" formControlName="birthDate">
+
+  <label>Téléphone</label>
+  <input type="text" formControlName="phone">
+
+  <label>Taille en cm</label>
+  <input type="number" formControlName="heightCm">
+
+  <label>Poids initial</label>
+  <input type="number" formControlName="initialWeightKg">
+
+  <label>Objectif</label>
+  <textarea type="text" formControlName="objective"></textarea>
+
+  <button type="submit">Enregistrer</button>
+</form>
+
+<!-- template -->
+<button (click)="goToListPatient()" class="btn btn-primary">
+  <i class="fas fa-plus"></i> List des Patients
+</button>
+

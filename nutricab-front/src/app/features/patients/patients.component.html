@@ -1,0 +1,50 @@
+
+
+<h2>Liste des patients</h2>
+<p *ngIf="loading">Chargement.....</p>
+
+<p *ngIf="errorMessage">
+  {{ errorMessage }}
+</p>
+<table>
+  <thead>
+  <tr>
+    <th>Nom</th>
+    <th>Téléphone</th>
+    <th>Taille</th>
+    <th>Poids initial</th>
+    <th>IMC initial</th>
+    <th>Objectif</th>
+    <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody>
+  @for (item of patients; track item.id) {
+  <tr>
+    <td>{{ item.fullName }}</td>
+    <td>{{ item.birthDate }}</td>
+    <td>{{ item.phone }}</td>
+    <td>{{ item.heightCm }}</td>
+    <td>{{ item.initialWeightKg }}</td>
+    <td>{{ item.initialBmi }}</td>
+    <td>{{ item.objective }}</td>
+      <td>
+        <button>Voir</button>
+        <button>Modifier</button>
+        <button (click)="deletePatient(item.id)">Supprimer</button>
+      </td>
+
+    </tr>
+  }@empty {
+  <tr>
+    <td colspan="5">Aucun patient trouvé</td>
+  </tr>
+  }
+  </tbody>
+</table>
+
+
+<!-- template -->
+<button (click)="goToNewPatient()" class="btn btn-primary">
+  <i class="fas fa-plus"></i> Nouveau Patient
+</button>
