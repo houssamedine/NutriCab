@@ -1,4 +1,4 @@
-package com.bd.patientsmd.models.mappers;
+package com.bd.patientsmd.models.requests;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

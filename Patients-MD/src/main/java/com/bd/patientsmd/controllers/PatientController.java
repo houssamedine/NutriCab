@@ -1,13 +1,13 @@
 package com.bd.patientsmd.controllers;
 
 import com.bd.patientsmd.models.dtos.PatientDto;
-import com.bd.patientsmd.models.mappers.CreatePatientRequest;
+import com.bd.patientsmd.models.requests.CreatePatientRequest;
 import com.bd.patientsmd.services.PatientService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/patients")
 public class PatientController {

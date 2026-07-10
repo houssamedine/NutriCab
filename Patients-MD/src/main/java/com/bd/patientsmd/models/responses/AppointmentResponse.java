@@ -1,13 +1,14 @@
-package com.bd.patientsmd.models.dtos;
+package com.bd.patientsmd.models.responses;
 
 import com.bd.patientsmd.models.enums.AppointmentStatus;
 
 import java.time.LocalDateTime;
 
-public record AppointmentDto(
+public record AppointmentResponse(
         Long id,
-        PatientDto patient,  // résumé du patient (pas tout le DTO complet)
+        PatientSummaryResponse patient,
         LocalDateTime appointmentDate,
         AppointmentStatus status,
         String notes
-) {}
+) {
+}

@@ -1,7 +1,7 @@
 package com.bd.patientsmd.services;
 
 import com.bd.patientsmd.models.dtos.PatientDto;
-import com.bd.patientsmd.models.mappers.CreatePatientRequest;
+import com.bd.patientsmd.models.requests.CreatePatientRequest;
 
 import java.util.List;
 

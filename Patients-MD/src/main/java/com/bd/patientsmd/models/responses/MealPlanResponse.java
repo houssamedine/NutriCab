@@ -1,8 +1,8 @@
-package com.bd.patientsmd.models.dtos;
+package com.bd.patientsmd.models.responses;
 
-public record Meal_plansDto(
+public record MealPlanResponse(
         Long id,
-        PatientDto patient,
+        PatientSummaryResponse patient,
         String title,
         String objective,
         Integer calories,

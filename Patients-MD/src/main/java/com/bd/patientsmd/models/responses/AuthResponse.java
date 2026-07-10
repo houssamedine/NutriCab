@@ -1,4 +1,8 @@
 package com.bd.patientsmd.models.responses;
 
-public record AuthResponse() {
+public record AuthResponse(
+        String token,
+        String fullName,
+        String role
+) {
 }

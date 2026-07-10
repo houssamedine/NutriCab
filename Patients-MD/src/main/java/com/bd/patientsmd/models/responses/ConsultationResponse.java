@@ -1,10 +1,10 @@
-package com.bd.patientsmd.models.dtos;
+package com.bd.patientsmd.models.responses;
 
 import java.time.LocalDate;
 
-public record ConsultationsDto(
+public record ConsultationResponse(
         Long id,
-        PatientDto patient,
+        PatientSummaryResponse patient,
         LocalDate consultationDate,
         Double weightKg,
         Double waistCm,

@@ -2,12 +2,12 @@ package com.bd.patientsmd.services;
 
 import com.bd.patientsmd.models.dtos.PatientDto;
 import com.bd.patientsmd.models.entites.Patients;
-import com.bd.patientsmd.models.mappers.CreatePatientRequest;
+import com.bd.patientsmd.models.requests.CreatePatientRequest;
 import com.bd.patientsmd.models.mappers.PatientMapper;
+import com.bd.patientsmd.exceptions.ResourceNotFoundException;
 import com.bd.patientsmd.repository.PatientRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,7 +36,7 @@ public class PatientServiceImpl implements PatientService{
     @Override
     public PatientDto updatePatient(Long id, CreatePatientRequest patientRequest) {
         Patients patient=patientRepository.findById(id)
-                .orElseThrow(()->new RuntimeException(
+                .orElseThrow(()->new ResourceNotFoundException(
                         "Patient introuvable"
                 ));
         patient.setFullName(patientRequest.fullName());
@@ -59,7 +59,7 @@ public class PatientServiceImpl implements PatientService{
     @Override
     public PatientDto getPatientById(Long id) {
         Patients patient=patientRepository.findById(id)
-                .orElseThrow(()->new RuntimeException(
+                .orElseThrow(()->new ResourceNotFoundException(
                         "Patient introuvable"
                 ));
         return PatientMapper.toDto(patient);
@@ -68,7 +68,7 @@ public class PatientServiceImpl implements PatientService{
     @Override
     public void deletePatient(Long id) {
         if (!patientRepository.existsById(id)){
-            throw new RuntimeException("Patient introuvable");
+            throw new ResourceNotFoundException("Patient introuvable");
         }
         patientRepository.deleteById(id);
     }
