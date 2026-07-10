@@ -1,6 +1,6 @@
 package com.bd.patientsmd.models.mappers;
 
-import com.bd.patientsmd.models.dtos.Meal_plansDto;
+import com.bd.patientsmd.models.dtos.MealPlanDto;
 import com.bd.patientsmd.models.entites.MealPlan;
 import com.bd.patientsmd.models.entites.Patients;
 import com.bd.patientsmd.models.requests.CreateMealPlanRequest;
@@ -8,10 +8,10 @@ import com.bd.patientsmd.models.responses.MealPlanResponse;
 
 public class MealPlanMapper {
 
-    public static Meal_plansDto toDto(MealPlan mealPlan) {
+    public static MealPlanDto toDto(MealPlan mealPlan) {
         if (mealPlan == null) return null;
 
-        return new Meal_plansDto(
+        return new MealPlanDto(
                 mealPlan.getId(),
                 PatientMapper.toDto(mealPlan.getPatient()),
                 mealPlan.getTitle(),

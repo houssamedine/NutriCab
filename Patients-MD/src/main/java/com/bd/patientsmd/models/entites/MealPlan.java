@@ -23,6 +23,6 @@ public class MealPlan {
 
     private Integer calories;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 }
