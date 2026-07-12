@@ -9,6 +9,7 @@ public record UsersDto(
         String fullName,
         String email,
         UserRole role,
+        boolean active,
         List<PatientDto> patients
 ) {
 }

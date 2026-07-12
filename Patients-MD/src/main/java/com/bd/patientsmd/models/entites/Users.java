@@ -34,6 +34,10 @@ public class Users {
     private UserRole role;
 
     @Builder.Default
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Builder.Default
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Patients> patients = new ArrayList<>();
 }

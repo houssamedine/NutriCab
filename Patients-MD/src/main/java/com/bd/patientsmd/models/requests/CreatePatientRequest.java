@@ -8,6 +8,8 @@ import java.time.LocalDate;
 
 
 public record CreatePatientRequest(
+        Long userId,
+
         @NotBlank(message = "Le nom complet est obligatoire")
         String fullName,
         @NotNull(message = "La date de naissance est obligatoire")

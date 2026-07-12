@@ -3,6 +3,7 @@ package com.bd.patientsmd.controllers;
 import com.bd.patientsmd.models.dtos.MealPlanDto;
 import com.bd.patientsmd.models.requests.CreateMealPlanRequest;
 import com.bd.patientsmd.services.MealPlanService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class MealPlanController {
     }
 
     @PostMapping()
-    public MealPlanDto createMealPlan(@RequestBody CreateMealPlanRequest request){
+    public MealPlanDto createMealPlan(@Valid @RequestBody CreateMealPlanRequest request){
         return planService.createMealPlan(request);
     }
 
@@ -33,7 +34,7 @@ public class MealPlanController {
     }
 
     @PutMapping("/{id}")
-    public MealPlanDto updateMealPlan(@PathVariable Long id, @RequestBody CreateMealPlanRequest request){
+    public MealPlanDto updateMealPlan(@PathVariable Long id, @Valid @RequestBody CreateMealPlanRequest request){
         return planService.updateMealPlan(id,request);
     }
 

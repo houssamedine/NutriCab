@@ -3,6 +3,7 @@ package com.bd.patientsmd.controllers;
 import com.bd.patientsmd.models.dtos.AppointmentDto;
 import com.bd.patientsmd.models.requests.CreateAppointmentRequest;
 import com.bd.patientsmd.services.AppointmentService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,12 +19,12 @@ public class AppointmentsController {
     }
 
     @PostMapping
-    public AppointmentDto createAppointment(@RequestBody CreateAppointmentRequest appointmentRequest){
+    public AppointmentDto createAppointment(@Valid @RequestBody CreateAppointmentRequest appointmentRequest){
         return appointmentService.createAppointment(appointmentRequest);
     }
 
     @PutMapping("/{id}")
-    public AppointmentDto updateAppointment(@PathVariable Long id, @RequestBody CreateAppointmentRequest appointmentRequest){
+    public AppointmentDto updateAppointment(@PathVariable Long id, @Valid @RequestBody CreateAppointmentRequest appointmentRequest){
         return appointmentService.updateAppointment(id,appointmentRequest);
     }
 

@@ -13,6 +13,19 @@ spring:
       ddl-auto: update
     show-sql: true
     database-platform: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: true
 
 server:
   port: 8182
+
+logging:
+  level:
+    com.bd.patientsmd: DEBUG
+    org.springframework.web: INFO
+    org.springframework.transaction.interceptor: TRACE
+    org.springframework.orm.jpa: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

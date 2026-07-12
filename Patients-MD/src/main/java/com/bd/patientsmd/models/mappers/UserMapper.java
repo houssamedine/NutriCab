@@ -18,6 +18,7 @@ public class UserMapper {
                 user.getFullName(),
                 user.getEmail(),
                 user.getRole(),
+                user.isActive(),
                 user.getPatients() == null
                         ? List.of()
                         : user.getPatients().stream()

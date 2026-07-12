@@ -3,6 +3,7 @@ package com.bd.patientsmd.controllers;
 import com.bd.patientsmd.models.dtos.ConsultationsDto;
 import com.bd.patientsmd.models.requests.CreateConsultationRequest;
 import com.bd.patientsmd.services.ConsultationsService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class ConsultationsController {
     }
 
     @PostMapping
-    public ConsultationsDto createConsultation(@RequestBody CreateConsultationRequest request){
+    public ConsultationsDto createConsultation(@Valid @RequestBody CreateConsultationRequest request){
         return consultationsService.createConsultation(request);
     }
 
@@ -33,7 +34,7 @@ public class ConsultationsController {
     }
 
     @PutMapping("/{id}")
-    public ConsultationsDto updateConsultation(@PathVariable Long id, @RequestBody CreateConsultationRequest request){
+    public ConsultationsDto updateConsultation(@PathVariable Long id, @Valid @RequestBody CreateConsultationRequest request){
         return consultationsService.updateConsultation(id,request);
     }
 

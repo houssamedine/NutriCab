@@ -2,10 +2,12 @@ package com.bd.patientsmd.services;
 
 import com.bd.patientsmd.models.dtos.PatientDto;
 import com.bd.patientsmd.models.entites.Patients;
+import com.bd.patientsmd.models.entites.Users;
 import com.bd.patientsmd.models.requests.CreatePatientRequest;
 import com.bd.patientsmd.models.mappers.PatientMapper;
 import com.bd.patientsmd.exceptions.ResourceNotFoundException;
 import com.bd.patientsmd.repository.PatientRepository;
+import com.bd.patientsmd.repository.UsersRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,9 +20,12 @@ import java.util.List;
 public class PatientServiceImpl implements PatientService{
 
     private final PatientRepository patientRepository;
+    private final UsersRepository usersRepository;
 
     @Override
     public PatientDto createPatient(CreatePatientRequest patientRequest) {
+        Users user = getUserIfPresent(patientRequest.userId());
+
         Patients patient = Patients.builder()
                 .fullName(patientRequest.fullName())
                 .birthDate(patientRequest.birthDate())
@@ -28,6 +33,7 @@ public class PatientServiceImpl implements PatientService{
                 .heightCm(patientRequest.heightCm())
                 .initialWeightKg(patientRequest.initialWeightKg())
                 .objective(patientRequest.objective())
+                .user(user)
                 .build();
         Patients savedPatient = patientRepository.save(patient);
         return PatientMapper.toDto(savedPatient);
@@ -45,6 +51,7 @@ public class PatientServiceImpl implements PatientService{
         patient.setHeightCm(patientRequest.heightCm());
         patient.setInitialWeightKg(patientRequest.initialWeightKg());
         patient.setObjective(patientRequest.objective());
+        patient.setUser(getUserIfPresent(patientRequest.userId()));
         return PatientMapper.toDto(patient);
     }
 
@@ -79,5 +86,14 @@ public class PatientServiceImpl implements PatientService{
                 .stream()
                 .map(PatientMapper::toDto)
                 .toList();
+    }
+
+    private Users getUserIfPresent(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+
+        return usersRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable"));
     }
 }
