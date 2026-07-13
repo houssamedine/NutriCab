@@ -14,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Users {
+public class Users extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -2,6 +2,7 @@ package com.bd.patientsmd.models.dtos;
 
 import com.bd.patientsmd.models.enums.UserRole;
 
+import java.time.Instant;
 import java.util.List;
 
 public record UsersDto(
@@ -10,6 +11,10 @@ public record UsersDto(
         String email,
         UserRole role,
         boolean active,
-        List<PatientDto> patients
+        List<PatientDto> patients,
+        Instant createdAt,
+        Instant updatedAt,
+        String createdBy,
+        String updatedBy
 ) {
 }

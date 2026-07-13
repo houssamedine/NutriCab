@@ -1,5 +1,6 @@
 package com.bd.patientsmd.models.dtos;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 public record ConsultationsDto(
@@ -9,6 +10,10 @@ public record ConsultationsDto(
         Double weightKg,
         Double waistCm,
         String notes,
-        String recommendations
+        String recommendations,
+        Instant createdAt,
+        Instant updatedAt,
+        String createdBy,
+        String updatedBy
 ) {
 }

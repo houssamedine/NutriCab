@@ -18,7 +18,11 @@ public class ConsultationMapper {
                 consultation.getWeightKg(),
                 consultation.getWaistCm(),
                 consultation.getNotes(),
-                consultation.getRecommendations()
+                consultation.getRecommendations(),
+                consultation.getCreatedAt(),
+                consultation.getUpdatedAt(),
+                consultation.getCreatedBy(),
+                consultation.getUpdatedBy()
         );
     }
 

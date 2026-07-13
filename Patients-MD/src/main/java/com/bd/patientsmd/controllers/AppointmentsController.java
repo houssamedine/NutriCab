@@ -4,9 +4,11 @@ import com.bd.patientsmd.models.dtos.AppointmentDto;
 import com.bd.patientsmd.models.requests.CreateAppointmentRequest;
 import com.bd.patientsmd.services.AppointmentService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -19,37 +21,47 @@ public class AppointmentsController {
     }
 
     @PostMapping
-    public AppointmentDto createAppointment(@Valid @RequestBody CreateAppointmentRequest appointmentRequest){
+    @PreAuthorize("@authorizationService.canCreateAppointment(#appointmentRequest.patientId())")
+    public AppointmentDto createAppointment(@P("appointmentRequest") @Valid @RequestBody CreateAppointmentRequest appointmentRequest){
         return appointmentService.createAppointment(appointmentRequest);
     }
 
     @PutMapping("/{id}")
-    public AppointmentDto updateAppointment(@PathVariable Long id, @Valid @RequestBody CreateAppointmentRequest appointmentRequest){
+    @PreAuthorize("@authorizationService.canManageAppointment(#id) and @authorizationService.canCreateAppointment(#appointmentRequest.patientId())")
+    public AppointmentDto updateAppointment(
+            @P("id") @PathVariable Long id,
+            @P("appointmentRequest") @Valid @RequestBody CreateAppointmentRequest appointmentRequest
+    ){
         return appointmentService.updateAppointment(id,appointmentRequest);
     }
 
     @GetMapping
-    public List<AppointmentDto> getAllAppointment(){
-        return appointmentService.getAllAppointment();
+    @PreAuthorize("hasAnyRole('ADMIN', 'NUTRITIONIST', 'SECRETARY', 'PATIENT')")
+    public Page<AppointmentDto> getAllAppointment(Pageable pageable){
+        return appointmentService.getAllAppointment(pageable);
     }
 
     @GetMapping("/{id}")
-    public AppointmentDto getAppointmentById(@PathVariable Long id){
+    @PreAuthorize("@authorizationService.canAccessAppointment(#id)")
+    public AppointmentDto getAppointmentById(@P("id") @PathVariable Long id){
         return appointmentService.getAppointmentById(id);
     }
 
     @GetMapping("/patient/{id}")
-    public List<AppointmentDto> getPatientById(@PathVariable Long id){
-        return appointmentService.getPatientById(id);
+    @PreAuthorize("hasRole('SECRETARY') or @authorizationService.canAccessPatient(#id)")
+    public Page<AppointmentDto> getPatientById(@P("id") @PathVariable Long id, Pageable pageable){
+        return appointmentService.getPatientById(id, pageable);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteAppointment(@PathVariable Long id){
+    @PreAuthorize("@authorizationService.canManageAppointment(#id)")
+    public void deleteAppointment(@P("id") @PathVariable Long id){
         appointmentService.deleteAppointment(id);
     }
 
     @GetMapping("/search")
-    public List<AppointmentDto> findByStatus(@RequestParam String keyword){
-        return appointmentService.findByStatus(keyword);
+    @PreAuthorize("hasAnyRole('ADMIN', 'NUTRITIONIST', 'SECRETARY', 'PATIENT')")
+    public Page<AppointmentDto> findByStatus(@RequestParam String keyword, Pageable pageable){
+        return appointmentService.findByStatus(keyword, pageable);
     }
 }

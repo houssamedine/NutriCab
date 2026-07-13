@@ -17,9 +17,18 @@ spring:
       hibernate:
         format_sql: true
         highlight_sql: true
-
 server:
   port: 8182
+
+app:
+  security:
+    cors:
+      allowed-origins: http://localhost:4200
+    jwt:
+      issuer: patients-md
+      secret: ${JWT_SECRET:NutriCab_JWT_Secret_Key_2026_x7#kL9$mP2@vR5}
+      expiration-minutes: 60
+      refresh-expiration-days: 7
 
 logging:
   level:

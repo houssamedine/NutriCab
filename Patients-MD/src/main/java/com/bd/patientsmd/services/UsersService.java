@@ -6,13 +6,15 @@ import com.bd.patientsmd.models.enums.UserRole;
 import com.bd.patientsmd.models.requests.CreateUserRequest;
 import com.bd.patientsmd.models.requests.LoginRequest;
 import com.bd.patientsmd.models.responses.AuthResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface UsersService {
 
     UsersDto createUser(CreateUserRequest request);
-    List<UsersDto> getAllUsers();
+    Page<UsersDto> getAllUsers(Pageable pageable);
     UsersDto getUserById(Long id);
     UsersDto updateUser(Long id, CreateUserRequest request);
     void deleteUser(Long id);
@@ -20,8 +22,8 @@ public interface UsersService {
     AuthResponse login(LoginRequest request);
     // Recherche / filtrage
     UsersDto getUserByEmail(String email);
-    List<UsersDto> getUsersByRole(UserRole role);
-    List<UsersDto> getUsersByActiveAndRole(boolean active, UserRole role);
+    Page<UsersDto> getUsersByRole(UserRole role, Pageable pageable);
+    Page<UsersDto> getUsersByActiveAndRole(boolean active, UserRole role, Pageable pageable);
     // Patients associés
     List<PatientDto> getUserPatients(Long userId);
     // Actions métier

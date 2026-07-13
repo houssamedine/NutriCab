@@ -6,7 +6,7 @@ import lombok.*;
 @Entity
 @Table(name = "meal_plans")
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor @Builder
-public class MealPlan {
+public class MealPlan extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

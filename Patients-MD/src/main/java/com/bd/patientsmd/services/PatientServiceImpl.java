@@ -8,11 +8,12 @@ import com.bd.patientsmd.models.mappers.PatientMapper;
 import com.bd.patientsmd.exceptions.ResourceNotFoundException;
 import com.bd.patientsmd.repository.PatientRepository;
 import com.bd.patientsmd.repository.UsersRepository;
+import com.bd.patientsmd.security.CurrentUserService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -21,6 +22,7 @@ public class PatientServiceImpl implements PatientService{
 
     private final PatientRepository patientRepository;
     private final UsersRepository usersRepository;
+    private final CurrentUserService currentUserService;
 
     @Override
     public PatientDto createPatient(CreatePatientRequest patientRequest) {
@@ -35,7 +37,8 @@ public class PatientServiceImpl implements PatientService{
                 .objective(patientRequest.objective())
                 .user(user)
                 .build();
-        Patients savedPatient = patientRepository.save(patient);
+        patient.stampCreated();
+        Patients savedPatient = patientRepository.saveAndFlush(patient);
         return PatientMapper.toDto(savedPatient);
     }
 
@@ -52,15 +55,21 @@ public class PatientServiceImpl implements PatientService{
         patient.setInitialWeightKg(patientRequest.initialWeightKg());
         patient.setObjective(patientRequest.objective());
         patient.setUser(getUserIfPresent(patientRequest.userId()));
-        return PatientMapper.toDto(patient);
+        patient.stampUpdated();
+        return PatientMapper.toDto(patientRepository.saveAndFlush(patient));
     }
 
     @Override
-    public List<PatientDto> getAllPatients() {
-        return patientRepository.findAll()
-                .stream()
-                .map(PatientMapper::toDto)
-                .toList();
+    public Page<PatientDto> getAllPatients(Pageable pageable) {
+        if (!currentUserService.isAdmin()) {
+            return currentUserService.getCurrentUserId()
+                    .map(userId -> patientRepository.findByUserId(userId, pageable))
+                    .orElseGet(() -> Page.empty(pageable))
+                    .map(PatientMapper::toDto);
+        }
+
+        return patientRepository.findAll(pageable)
+                .map(PatientMapper::toDto);
     }
 
     @Override
@@ -81,11 +90,16 @@ public class PatientServiceImpl implements PatientService{
     }
 
     @Override
-    public List<PatientDto> searhPatient(String keyword) {
-        return patientRepository.findByFullNameContainingIgnoreCase(keyword)
-                .stream()
-                .map(PatientMapper::toDto)
-                .toList();
+    public Page<PatientDto> searhPatient(String keyword, Pageable pageable) {
+        if (!currentUserService.isAdmin()) {
+            return currentUserService.getCurrentUserId()
+                    .map(userId -> patientRepository.findByFullNameContainingIgnoreCaseAndUserId(keyword, userId, pageable))
+                    .orElseGet(() -> Page.empty(pageable))
+                    .map(PatientMapper::toDto);
+        }
+
+        return patientRepository.findByFullNameContainingIgnoreCase(keyword, pageable)
+                .map(PatientMapper::toDto);
     }
 
     private Users getUserIfPresent(Long userId) {

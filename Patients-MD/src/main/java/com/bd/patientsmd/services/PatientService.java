@@ -2,14 +2,14 @@ package com.bd.patientsmd.services;
 
 import com.bd.patientsmd.models.dtos.PatientDto;
 import com.bd.patientsmd.models.requests.CreatePatientRequest;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface PatientService {
     PatientDto createPatient(CreatePatientRequest patientRequest);
     PatientDto updatePatient(Long id,CreatePatientRequest patientRequest);
-    List<PatientDto> getAllPatients();
+    Page<PatientDto> getAllPatients(Pageable pageable);
     PatientDto getPatientById(Long id);
     void deletePatient(Long id);
-    List<PatientDto> searhPatient(String keyword);
+    Page<PatientDto> searhPatient(String keyword, Pageable pageable);
 }

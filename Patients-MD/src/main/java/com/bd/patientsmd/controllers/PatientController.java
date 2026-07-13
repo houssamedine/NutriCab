@@ -4,10 +4,12 @@ import com.bd.patientsmd.models.dtos.PatientDto;
 import com.bd.patientsmd.models.requests.CreatePatientRequest;
 import com.bd.patientsmd.services.PatientService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/patients")
 public class PatientController {
@@ -19,33 +21,42 @@ public class PatientController {
     }
 
     @GetMapping
-    public List<PatientDto> getAllPatients(){
-        return patientService.getAllPatients();
+    @PreAuthorize("hasAnyRole('ADMIN', 'NUTRITIONIST', 'PATIENT')")
+    public Page<PatientDto> getAllPatients(Pageable pageable){
+        return patientService.getAllPatients(pageable);
     }
 
     @PostMapping
-    public PatientDto createPatient(@Valid @RequestBody CreatePatientRequest patientRequest){
+    @PreAuthorize("hasRole('ADMIN') or @authorizationService.canCreatePatient(#patientRequest.userId())")
+    public PatientDto createPatient(@P("patientRequest") @Valid @RequestBody CreatePatientRequest patientRequest){
         return patientService.createPatient(patientRequest);
     }
 
     @GetMapping("/{id}")
-    public PatientDto getPatientById(@PathVariable Long id){
+    @PreAuthorize("@authorizationService.canAccessPatient(#id)")
+    public PatientDto getPatientById(@P("id") @PathVariable Long id){
         return patientService.getPatientById(id);
     }
 
     @PutMapping("/{id}")
-    public PatientDto updatePatient(@PathVariable Long id,@Valid @RequestBody CreatePatientRequest patientRequest){
+    @PreAuthorize("@authorizationService.canManagePatient(#id) and (hasRole('ADMIN') or @authorizationService.canCreatePatient(#patientRequest.userId()))")
+    public PatientDto updatePatient(
+            @P("id") @PathVariable Long id,
+            @P("patientRequest") @Valid @RequestBody CreatePatientRequest patientRequest
+    ){
         return patientService.updatePatient(id, patientRequest);
     }
 
     @DeleteMapping("/{id}")
-    public void deletePatient(@PathVariable Long id){
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deletePatient(@P("id") @PathVariable Long id){
         patientService.deletePatient(id);
     }
 
     @GetMapping("/search")
-    public List<PatientDto> searchPatients(@RequestParam String keyword){
-        return patientService.searhPatient(keyword);
+    @PreAuthorize("hasAnyRole('ADMIN', 'NUTRITIONIST', 'PATIENT')")
+    public Page<PatientDto> searchPatients(@RequestParam String keyword, Pageable pageable){
+        return patientService.searhPatient(keyword, pageable);
     }
 
 

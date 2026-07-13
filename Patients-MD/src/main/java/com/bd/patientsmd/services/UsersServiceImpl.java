@@ -1,5 +1,6 @@
 package com.bd.patientsmd.services;
 
+import com.bd.patientsmd.exceptions.InvalidCredentialsException;
 import com.bd.patientsmd.exceptions.ResourceNotFoundException;
 import com.bd.patientsmd.models.dtos.PatientDto;
 import com.bd.patientsmd.models.dtos.UsersDto;
@@ -12,12 +13,15 @@ import com.bd.patientsmd.models.requests.LoginRequest;
 import com.bd.patientsmd.models.responses.AuthResponse;
 import com.bd.patientsmd.repository.PatientRepository;
 import com.bd.patientsmd.repository.UsersRepository;
+import com.bd.patientsmd.security.JwtService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @Transactional
@@ -26,6 +30,9 @@ public class UsersServiceImpl implements UsersService{
 
     private final UsersRepository usersRepository;
     private final PatientRepository patientRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public UsersDto createUser(CreateUserRequest request) {
@@ -34,15 +41,15 @@ public class UsersServiceImpl implements UsersService{
         }
 
         Users user = UserMapper.toEntity(request);
-        return UserMapper.toDto(usersRepository.save(user));
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.stampCreated();
+        return UserMapper.toDto(usersRepository.saveAndFlush(user));
     }
 
     @Override
-    public List<UsersDto> getAllUsers() {
-        return usersRepository.findAll()
-                .stream()
-                .map(UserMapper::toDto)
-                .toList();
+    public Page<UsersDto> getAllUsers(Pageable pageable) {
+        return usersRepository.findAll(pageable)
+                .map(UserMapper::toDto);
     }
 
     @Override
@@ -64,7 +71,9 @@ public class UsersServiceImpl implements UsersService{
                 });
 
         UserMapper.updateEntity(user, request);
-        return UserMapper.toDto(user);
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.stampUpdated();
+        return UserMapper.toDto(usersRepository.saveAndFlush(user));
     }
 
     @Override
@@ -75,21 +84,52 @@ public class UsersServiceImpl implements UsersService{
         usersRepository.deleteById(id);
     }
 
+    private boolean passwordMatches(String rawPassword, Users user) {
+        String savedPassword = user.getPassword();
+
+        if (isBcryptHash(savedPassword) && passwordEncoder.matches(rawPassword, savedPassword)) {
+            return true;
+        }
+
+        if (rawPassword.equals(savedPassword)) {
+            user.setPassword(passwordEncoder.encode(rawPassword));
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean isBcryptHash(String password) {
+        return password != null
+                && (password.startsWith("$2a$")
+                || password.startsWith("$2b$")
+                || password.startsWith("$2y$"));
+    }
+
     @Override
     public AuthResponse login(LoginRequest request) {
         Users user = usersRepository.findByEmail(request.email())
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable"));
+                .orElseThrow(() -> new InvalidCredentialsException("Email ou mot de passe incorrect"));
 
         if (!user.isActive()) {
             throw new IllegalArgumentException("Utilisateur désactive");
         }
 
-        if (!user.getPassword().equals(request.password())) {
-            throw new IllegalArgumentException("Mot de passe incorrect");
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new IllegalArgumentException("Mot de passe utilisateur non configure");
+        }
+
+        if (user.getRole() == null) {
+            throw new IllegalArgumentException("Role utilisateur non configure");
+        }
+
+        if (!passwordMatches(request.password(), user)) {
+            throw new InvalidCredentialsException("Email ou mot de passe incorrect");
         }
 
         return new AuthResponse(
-                UUID.randomUUID().toString(),
+                jwtService.generateToken(user),
+                refreshTokenService.createRefreshToken(user),
                 user.getFullName(),
                 user.getRole().name()
         );
@@ -103,22 +143,18 @@ public class UsersServiceImpl implements UsersService{
     }
 
     @Override
-    public List<UsersDto> getUsersByRole(UserRole role) {
-        return usersRepository.findByRole(role)
-                .stream()
-                .map(UserMapper::toDto)
-                .toList();
+    public Page<UsersDto> getUsersByRole(UserRole role, Pageable pageable) {
+        return usersRepository.findByRole(role, pageable)
+                .map(UserMapper::toDto);
     }
 
     @Override
-    public List<UsersDto> getUsersByActiveAndRole(boolean active, UserRole role) {
-        List<Users> users = role == null
-                ? usersRepository.findByActive(active)
-                : usersRepository.findByActiveAndRole(active, role);
+    public Page<UsersDto> getUsersByActiveAndRole(boolean active, UserRole role, Pageable pageable) {
+        Page<Users> users = role == null
+                ? usersRepository.findByActive(active, pageable)
+                : usersRepository.findByActiveAndRole(active, role, pageable);
 
-        return users.stream()
-                .map(UserMapper::toDto)
-                .toList();
+        return users.map(UserMapper::toDto);
     }
 
     @Override
@@ -138,11 +174,11 @@ public class UsersServiceImpl implements UsersService{
         Users user = usersRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable"));
 
-        if (!user.getPassword().equals(oldPassword)) {
+        if (!passwordMatches(oldPassword, user)) {
             throw new IllegalArgumentException("Ancien mot de passe incorrect");
         }
 
-        user.setPassword(newPassword);
+        user.setPassword(passwordEncoder.encode(newPassword));
     }
 
     @Override
@@ -150,6 +186,9 @@ public class UsersServiceImpl implements UsersService{
         Users user = usersRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable"));
         user.setActive(!user.isActive());
-        return UserMapper.toDto(user);
+        user.stampUpdated();
+        return UserMapper.toDto(usersRepository.saveAndFlush(user));
     }
+
+
 }

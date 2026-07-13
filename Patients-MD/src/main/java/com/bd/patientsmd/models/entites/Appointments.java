@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Appointments {
+public class Appointments extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

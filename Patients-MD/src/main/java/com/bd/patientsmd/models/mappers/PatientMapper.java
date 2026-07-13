@@ -23,7 +23,11 @@ public class PatientMapper {
                 patient.getHeightCm(),
                 patient.getInitialWeightKg(),
                 patient.getObjective(),
-                Math.round(bmi * 100.0) / 100.0
+                Math.round(bmi * 100.0) / 100.0,
+                patient.getCreatedAt(),
+                patient.getUpdatedAt(),
+                patient.getCreatedBy(),
+                patient.getUpdatedBy()
         );
     }
 

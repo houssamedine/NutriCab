@@ -17,7 +17,11 @@ public class MealPlanMapper {
                 mealPlan.getTitle(),
                 mealPlan.getObjective(),
                 mealPlan.getCalories(),
-                mealPlan.getContent()
+                mealPlan.getContent(),
+                mealPlan.getCreatedAt(),
+                mealPlan.getUpdatedAt(),
+                mealPlan.getCreatedBy(),
+                mealPlan.getUpdatedBy()
         );
     }
 

@@ -4,6 +4,10 @@ import com.bd.patientsmd.models.dtos.ConsultationsDto;
 import com.bd.patientsmd.models.requests.CreateConsultationRequest;
 import com.bd.patientsmd.services.ConsultationsService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,41 +23,52 @@ public class ConsultationsController {
     }
 
     @PostMapping
-    public ConsultationsDto createConsultation(@Valid @RequestBody CreateConsultationRequest request){
+    @PreAuthorize("@authorizationService.canCreateConsultation(#request.patientId())")
+    public ConsultationsDto createConsultation(@P("request") @Valid @RequestBody CreateConsultationRequest request){
         return consultationsService.createConsultation(request);
     }
 
     @GetMapping
-    public List<ConsultationsDto> getAllConsultations(){
-        return consultationsService.getAllConsultations();
+    @PreAuthorize("hasAnyRole('ADMIN', 'NUTRITIONIST', 'PATIENT')")
+    public Page<ConsultationsDto> getAllConsultations(Pageable pageable){
+        return consultationsService.getAllConsultations(pageable);
     }
 
     @GetMapping("/{id}")
-    public ConsultationsDto getConsultationById(@PathVariable Long id){
+    @PreAuthorize("@authorizationService.canAccessConsultation(#id)")
+    public ConsultationsDto getConsultationById(@P("id") @PathVariable Long id){
         return consultationsService.getConsultationById(id);
     }
 
     @PutMapping("/{id}")
-    public ConsultationsDto updateConsultation(@PathVariable Long id, @Valid @RequestBody CreateConsultationRequest request){
+    @PreAuthorize("@authorizationService.canManageConsultation(#id) and @authorizationService.canCreateConsultation(#request.patientId())")
+    public ConsultationsDto updateConsultation(
+            @P("id") @PathVariable Long id,
+            @P("request") @Valid @RequestBody CreateConsultationRequest request
+    ){
         return consultationsService.updateConsultation(id,request);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteConsultation(@PathVariable Long id){
+    @PreAuthorize("@authorizationService.canManageConsultation(#id)")
+    public void deleteConsultation(@P("id") @PathVariable Long id){
         consultationsService.deleteConsultation(id);
     }
 
     @GetMapping("/patient/{patientId}")
-    public List<ConsultationsDto> getConsultationsByPatient(@PathVariable Long patientId){
-        return consultationsService.getConsultationsByPatient(patientId);
+    @PreAuthorize("@authorizationService.canAccessPatient(#patientId)")
+    public Page<ConsultationsDto> getConsultationsByPatient(@P("patientId") @PathVariable Long patientId, Pageable pageable){
+        return consultationsService.getConsultationsByPatient(patientId, pageable);
     }
 
     @GetMapping("/patient/{patientId}/weight-history")
-    public List<ConsultationsDto> getWeightHistoryByPatient(@PathVariable Long patientId){
+    @PreAuthorize("@authorizationService.canAccessPatient(#patientId)")
+    public List<ConsultationsDto> getWeightHistoryByPatient(@P("patientId") @PathVariable Long patientId){
         return consultationsService.getWeightHistoryByPatient(patientId);
     }
 
     @GetMapping("/recent")
+    @PreAuthorize("hasAnyRole('ADMIN', 'NUTRITIONIST', 'PATIENT')")
     public List<ConsultationsDto> getRecentConsultations(){
         return consultationsService.getRecentConsultations();
     }

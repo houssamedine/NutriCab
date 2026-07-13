@@ -5,10 +5,10 @@ import com.bd.patientsmd.models.dtos.UsersDto;
 import com.bd.patientsmd.models.enums.UserRole;
 import com.bd.patientsmd.models.requests.ChangePasswordRequest;
 import com.bd.patientsmd.models.requests.CreateUserRequest;
-import com.bd.patientsmd.models.requests.LoginRequest;
-import com.bd.patientsmd.models.responses.AuthResponse;
 import com.bd.patientsmd.services.UsersService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,8 +29,8 @@ public class UsersController {
     }
 
     @GetMapping
-    public List<UsersDto> getAllUsers() {
-        return usersService.getAllUsers();
+    public Page<UsersDto> getAllUsers(Pageable pageable) {
+        return usersService.getAllUsers(pageable);
     }
 
     @GetMapping("/{id}")
@@ -48,24 +48,23 @@ public class UsersController {
         usersService.deleteUser(id);
     }
 
-    @PostMapping("/login")
-    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
-        return usersService.login(request);
-    }
-
     @GetMapping("/email/{email}")
     public UsersDto getUserByEmail(@PathVariable String email) {
         return usersService.getUserByEmail(email);
     }
 
     @GetMapping("/role/{role}")
-    public List<UsersDto> getUsersByRole(@PathVariable UserRole role) {
-        return usersService.getUsersByRole(role);
+    public Page<UsersDto> getUsersByRole(@PathVariable UserRole role, Pageable pageable) {
+        return usersService.getUsersByRole(role, pageable);
     }
 
     @GetMapping("/filter")
-    public List<UsersDto> getUsersByActiveAndRole(@RequestParam boolean active, @RequestParam(required = false) UserRole role) {
-        return usersService.getUsersByActiveAndRole(active, role);
+    public Page<UsersDto> getUsersByActiveAndRole(
+            @RequestParam boolean active,
+            @RequestParam(required = false) UserRole role,
+            Pageable pageable
+    ) {
+        return usersService.getUsersByActiveAndRole(active, role, pageable);
     }
 
     @GetMapping("/{userId}/patients")

@@ -2,17 +2,17 @@ package com.bd.patientsmd.services;
 
 import com.bd.patientsmd.models.dtos.MealPlanDto;
 import com.bd.patientsmd.models.requests.CreateMealPlanRequest;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface MealPlanService {
     MealPlanDto createMealPlan(CreateMealPlanRequest request);
-    List<MealPlanDto> getAllMealPlans();
+    Page<MealPlanDto> getAllMealPlans(Pageable pageable);
     MealPlanDto getMealPlanById(Long id);
     MealPlanDto updateMealPlan(Long id, CreateMealPlanRequest request);
     void deleteMealPlan(Long id);
-    List<MealPlanDto> getMealPlansByPatient(Long patientId);
-    List<MealPlanDto> getMealPlansByObjective(String objective);
-    List<MealPlanDto> getMealPlansByCalorieRange(Integer minCalories, Integer maxCalories);
+    Page<MealPlanDto> getMealPlansByPatient(Long patientId, Pageable pageable);
+    Page<MealPlanDto> getMealPlansByObjective(String objective, Pageable pageable);
+    Page<MealPlanDto> getMealPlansByCalorieRange(Integer minCalories, Integer maxCalories, Pageable pageable);
     MealPlanDto getActiveMealPlanByPatient(Long patientId);
 }

@@ -18,7 +18,11 @@ public class AppointmentMapper {
                 PatientMapper.toDto(appointment.getPatient()),
                 appointment.getAppointmentDate(),
                 appointment.getStatus(),
-                appointment.getNotes()
+                appointment.getNotes(),
+                appointment.getCreatedAt(),
+                appointment.getUpdatedAt(),
+                appointment.getCreatedBy(),
+                appointment.getUpdatedBy()
         );
     }
 

@@ -9,11 +9,13 @@ import com.bd.patientsmd.models.mappers.AppointmentMapper;
 import com.bd.patientsmd.models.requests.CreateAppointmentRequest;
 import com.bd.patientsmd.repository.AppointmentRepository;
 import com.bd.patientsmd.repository.PatientRepository;
+import com.bd.patientsmd.security.CurrentUserService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 @Service
 @AllArgsConstructor
 @Transactional
@@ -21,6 +23,7 @@ public class AppointmentServiceImpl  implements AppointmentService{
 
     private final AppointmentRepository appointmentRepository;
     private final PatientRepository patientRepository;
+    private final CurrentUserService currentUserService;
 
     @Override
     public AppointmentDto createAppointment(CreateAppointmentRequest appointmentRequest) {
@@ -28,7 +31,8 @@ public class AppointmentServiceImpl  implements AppointmentService{
                 .orElseThrow(() -> new ResourceNotFoundException("Patient introuvable"));
 
         Appointments appointment = AppointmentMapper.toEntity(appointmentRequest, patient);
-        Appointments appointmentSaved=appointmentRepository.save(appointment);
+        appointment.stampCreated();
+        Appointments appointmentSaved=appointmentRepository.saveAndFlush(appointment);
         return AppointmentMapper.toDto(appointmentSaved);
     }
 
@@ -39,13 +43,21 @@ public class AppointmentServiceImpl  implements AppointmentService{
         Patients patient = patientRepository.findById(appointmentRequest.patientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Patient introuvable"));
         AppointmentMapper.updateEntity(appointment, appointmentRequest, patient);
-        return AppointmentMapper.toDto(appointment);
+        appointment.stampUpdated();
+        return AppointmentMapper.toDto(appointmentRepository.saveAndFlush(appointment));
     }
 
     @Override
-    public List<AppointmentDto> getAllAppointment() {
-        return appointmentRepository.findAll()
-                .stream().map(AppointmentMapper::toDto).toList();
+    public Page<AppointmentDto> getAllAppointment(Pageable pageable) {
+        if (!currentUserService.isAdmin() && !currentUserService.isSecretary()) {
+            return currentUserService.getCurrentUserId()
+                    .map(userId -> appointmentRepository.findByPatientUserId(userId, pageable))
+                    .orElseGet(() -> Page.empty(pageable))
+                    .map(AppointmentMapper::toDto);
+        }
+
+        return appointmentRepository.findAll(pageable)
+                .map(AppointmentMapper::toDto);
     }
 
     @Override
@@ -56,11 +68,9 @@ public class AppointmentServiceImpl  implements AppointmentService{
     }
 
     @Override
-    public List<AppointmentDto> getPatientById(Long id) {
-        return appointmentRepository.findByPatientId(id)
-                .stream()
-                .map(AppointmentMapper::toDto)
-                .toList();
+    public Page<AppointmentDto> getPatientById(Long id, Pageable pageable) {
+        return appointmentRepository.findByPatientId(id, pageable)
+                .map(AppointmentMapper::toDto);
     }
 
     @Override
@@ -72,12 +82,17 @@ public class AppointmentServiceImpl  implements AppointmentService{
     }
 
     @Override
-    public List<AppointmentDto> findByStatus(String keyword) {
+    public Page<AppointmentDto> findByStatus(String keyword, Pageable pageable) {
         AppointmentStatus status = AppointmentStatus.valueOf(keyword.toUpperCase());
 
-        return appointmentRepository.findByStatus(status)
-                .stream()
-                .map(AppointmentMapper::toDto)
-                .toList();
+        if (!currentUserService.isAdmin() && !currentUserService.isSecretary()) {
+            return currentUserService.getCurrentUserId()
+                    .map(userId -> appointmentRepository.findByStatusAndPatientUserId(status, userId, pageable))
+                    .orElseGet(() -> Page.empty(pageable))
+                    .map(AppointmentMapper::toDto);
+        }
+
+        return appointmentRepository.findByStatus(status, pageable)
+                .map(AppointmentMapper::toDto);
     }
 }

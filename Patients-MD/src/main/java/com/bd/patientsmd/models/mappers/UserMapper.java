@@ -23,7 +23,11 @@ public class UserMapper {
                         ? List.of()
                         : user.getPatients().stream()
                         .map(PatientMapper::toDto)
-                        .toList()
+                        .toList(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                user.getCreatedBy(),
+                user.getUpdatedBy()
         );
     }
 
