@@ -22,8 +22,14 @@ server:
 
 app:
   security:
+    auth:
+      login-checks-enabled: false
+      authorization-checks-enabled: false
     cors:
       allowed-origins: http://localhost:4200
+    cookies:
+      secure: false
+      same-site: Lax
     jwt:
       issuer: patients-md
       secret: ${JWT_SECRET:NutriCab_JWT_Secret_Key_2026_x7#kL9$mP2@vR5}

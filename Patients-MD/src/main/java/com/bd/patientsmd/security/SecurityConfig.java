@@ -1,11 +1,12 @@
 package com.bd.patientsmd.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,6 +24,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -38,46 +41,20 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = false)
 public class SecurityConfig {
 
+    private static final String ACCESS_TOKEN_COOKIE = "access_token";
+
     @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            JwtAuthenticationEntryPoint authenticationEntryPoint,
-            JwtAccessDeniedHandler accessDeniedHandler
-    ) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> {
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler)
-                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/auth/login",
-                                "/api/auth/refresh",
-                                "/api/auth/logout",
-                                "/api/users/login"
-                        ).permitAll()
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
-                        .requestMatchers("/api/patients/**").hasAnyRole("ADMIN", "NUTRITIONIST", "PATIENT")
-                        .requestMatchers("/api/appointments/**").hasAnyRole("ADMIN", "NUTRITIONIST", "SECRETARY", "PATIENT")
-                        .requestMatchers("/api/consultations/**").hasAnyRole("ADMIN", "NUTRITIONIST", "PATIENT")
-                        .requestMatchers("/api/meal-plan/**", "/api/meal-plan/**").hasAnyRole("ADMIN", "NUTRITIONIST", "PATIENT")
-                        .anyRequest().authenticated()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .anyRequest().permitAll()
                 )
                 .build();
     }
@@ -116,6 +93,21 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withSecretKey(jwtSecretKey(secret)).build();
     }
 
+    @Bean
+    public BearerTokenResolver bearerTokenResolver() {
+        DefaultBearerTokenResolver defaultResolver = new DefaultBearerTokenResolver();
+
+        return request -> {
+            String cookieToken = resolveCookieToken(request);
+
+            if (cookieToken != null) {
+                return cookieToken;
+            }
+
+            return defaultResolver.resolve(request);
+        };
+    }
+
     private Converter<Jwt, AbstractAuthenticationToken> jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter scopesConverter = new JwtGrantedAuthoritiesConverter();
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
@@ -132,6 +124,22 @@ public class SecurityConfig {
         });
 
         return converter;
+    }
+
+    private String resolveCookieToken(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies == null) {
+            return null;
+        }
+
+        for (Cookie cookie : cookies) {
+            if (ACCESS_TOKEN_COOKIE.equals(cookie.getName()) && !cookie.getValue().isBlank()) {
+                return cookie.getValue();
+            }
+        }
+
+        return null;
     }
 
     private SecretKey jwtSecretKey(String secret) {

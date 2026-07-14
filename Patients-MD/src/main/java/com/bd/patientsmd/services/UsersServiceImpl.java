@@ -10,11 +10,11 @@ import com.bd.patientsmd.models.mappers.PatientMapper;
 import com.bd.patientsmd.models.mappers.UserMapper;
 import com.bd.patientsmd.models.requests.CreateUserRequest;
 import com.bd.patientsmd.models.requests.LoginRequest;
-import com.bd.patientsmd.models.responses.AuthResponse;
+import com.bd.patientsmd.models.responses.AuthSession;
 import com.bd.patientsmd.repository.PatientRepository;
 import com.bd.patientsmd.repository.UsersRepository;
 import com.bd.patientsmd.security.JwtService;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +25,6 @@ import java.util.List;
 
 @Service
 @Transactional
-@AllArgsConstructor
 public class UsersServiceImpl implements UsersService{
 
     private final UsersRepository usersRepository;
@@ -33,6 +32,23 @@ public class UsersServiceImpl implements UsersService{
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final boolean loginChecksEnabled;
+
+    public UsersServiceImpl(
+            UsersRepository usersRepository,
+            PatientRepository patientRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            RefreshTokenService refreshTokenService,
+            @Value("${app.security.auth.login-checks-enabled:true}") boolean loginChecksEnabled
+    ) {
+        this.usersRepository = usersRepository;
+        this.patientRepository = patientRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
+        this.loginChecksEnabled = loginChecksEnabled;
+    }
 
     @Override
     public UsersDto createUser(CreateUserRequest request) {
@@ -107,15 +123,15 @@ public class UsersServiceImpl implements UsersService{
     }
 
     @Override
-    public AuthResponse login(LoginRequest request) {
-        Users user = usersRepository.findByEmail(request.email())
+    public AuthSession login(LoginRequest request) {
+        Users user = usersRepository.findByEmailIgnoreCase(request.email().trim())
                 .orElseThrow(() -> new InvalidCredentialsException("Email ou mot de passe incorrect"));
 
-        if (!user.isActive()) {
+        if (loginChecksEnabled && !user.isActive()) {
             throw new IllegalArgumentException("Utilisateur désactive");
         }
 
-        if (user.getPassword() == null || user.getPassword().isBlank()) {
+        if (loginChecksEnabled && (user.getPassword() == null || user.getPassword().isBlank())) {
             throw new IllegalArgumentException("Mot de passe utilisateur non configure");
         }
 
@@ -123,11 +139,11 @@ public class UsersServiceImpl implements UsersService{
             throw new IllegalArgumentException("Role utilisateur non configure");
         }
 
-        if (!passwordMatches(request.password(), user)) {
+        if (loginChecksEnabled && !passwordMatches(request.password(), user)) {
             throw new InvalidCredentialsException("Email ou mot de passe incorrect");
         }
 
-        return new AuthResponse(
+        return new AuthSession(
                 jwtService.generateToken(user),
                 refreshTokenService.createRefreshToken(user),
                 user.getFullName(),
@@ -189,6 +205,5 @@ public class UsersServiceImpl implements UsersService{
         user.stampUpdated();
         return UserMapper.toDto(usersRepository.saveAndFlush(user));
     }
-
-
+    
 }

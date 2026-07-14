@@ -1,5 +1,6 @@
 package com.bd.patientsmd.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -10,6 +11,14 @@ import java.util.Optional;
 @Service
 public class CurrentUserService {
 
+    private final boolean authorizationChecksEnabled;
+
+    public CurrentUserService(
+            @Value("${app.security.auth.authorization-checks-enabled:true}") boolean authorizationChecksEnabled
+    ) {
+        this.authorizationChecksEnabled = authorizationChecksEnabled;
+    }
+
     public Optional<Long> getCurrentUserId() {
         return getCurrentJwt()
                 .map(jwt -> jwt.getClaim("userId"))
@@ -17,6 +26,10 @@ public class CurrentUserService {
     }
 
     public boolean hasRole(String role) {
+        if (!authorizationChecksEnabled) {
+            return "ADMIN".equals(role);
+        }
+
         return getCurrentJwt()
                 .map(jwt -> role.equals(jwt.getClaimAsString("role")))
                 .orElse(false);

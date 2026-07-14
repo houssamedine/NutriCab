@@ -3,7 +3,7 @@ package com.bd.patientsmd.services;
 import com.bd.patientsmd.exceptions.InvalidCredentialsException;
 import com.bd.patientsmd.models.entites.RefreshToken;
 import com.bd.patientsmd.models.entites.Users;
-import com.bd.patientsmd.models.responses.AuthResponse;
+import com.bd.patientsmd.models.responses.AuthSession;
 import com.bd.patientsmd.repository.RefreshTokenRepository;
 import com.bd.patientsmd.security.JwtService;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +45,7 @@ public class RefreshTokenService {
         return refreshTokenRepository.save(refreshToken).getToken();
     }
 
-    public AuthResponse refreshAccessToken(String token) {
+    public AuthSession refreshAccessToken(String token) {
         RefreshToken oldRefreshToken = refreshTokenRepository.findByToken(token)
                 .orElseThrow(() -> new InvalidCredentialsException("Refresh token invalide"));
 
@@ -58,7 +58,7 @@ public class RefreshTokenService {
         String newAccessToken = jwtService.generateToken(user);
         String newRefreshToken = createRefreshToken(user);
 
-        return new AuthResponse(
+        return new AuthSession(
                 newAccessToken,
                 newRefreshToken,
                 user.getFullName(),
