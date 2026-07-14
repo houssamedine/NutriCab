@@ -1,0 +1,65 @@
+<main class="login-page">
+  <section class="login-panel">
+    <div class="brand">
+      <span class="brand-mark">N</span>
+      <div>
+        <h1>NutriCab</h1>
+        <p>Espace de gestion nutritionnelle</p>
+      </div>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="login()" class="login-form" novalidate>
+      <div class="form-header">
+        <h2>Connexion</h2>
+        <p>Accedez a votre tableau de bord.</p>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert" role="alert">
+        {{ errorMessage }}
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          placeholder="exemple@nutricab.com"
+          [class.invalid]="emailInvalid"
+        >
+        <small *ngIf="emailInvalid">Veuillez saisir un email valide.</small>
+      </div>
+
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <div class="password-field">
+          <input
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="current-password"
+            placeholder="Votre mot de passe"
+            [class.invalid]="passwordInvalid"
+          >
+          <button type="button" (click)="togglePassword()" class="toggle-password">
+            {{ showPassword ? 'Masquer' : 'Afficher' }}
+          </button>
+        </div>
+        <small *ngIf="passwordInvalid">Le mot de passe doit contenir au moins 6 caracteres.</small>
+      </div>
+
+      <label class="remember">
+        <input type="checkbox" formControlName="rememberMe">
+        <span>Garder ma session active</span>
+      </label>
+
+      <button type="submit" class="submit-button" [disabled]="loading">
+        {{ loading ? 'Connexion...' : 'Se connecter' }}
+      </button>
+    </form>
+  </section>
+  
+</main>
+
+

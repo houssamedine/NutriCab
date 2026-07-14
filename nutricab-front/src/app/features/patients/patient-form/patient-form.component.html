@@ -1,28 +1,64 @@
-<H2>Ajouter Un Patient</H2>
-<form [formGroup]="patientForm" (ngSubmit)="savePatient()">
-  <label>Nom complet</label>
-  <input type="text" formControlName="fullName">
+<div class="patient-form-page">
+  <div class="page-header">
+    <h2>
+      <i class="fas fa-user-plus"></i>
+      {{ isEditMode ? 'Modifier le patient' : 'Ajouter un patient' }}
+    </h2>
+  </div>
 
-  <label>Date de naissance</label>
-  <input type="date" formControlName="birthDate">
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
 
-  <label>Téléphone</label>
-  <input type="text" formControlName="phone">
+  <form class="patient-form" [formGroup]="patientForm" (ngSubmit)="savePatient()" novalidate>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="fullName" class="form-label">Nom complet</label>
+        <input type="text" class="form-control" [class.is-invalid]="fieldInvalid('fullName')" formControlName="fullName"
+          id="fullName" placeholder="Ex: xxxxx....">
+        <div class="invalid-feedback">Le nom complet est obligatoire.</div>
+      </div>
 
-  <label>Taille en cm</label>
-  <input type="number" formControlName="heightCm">
+      <div class="col-md-6">
+        <label for="birthDate" class="form-label">Date de naissance</label>
+        <input type="date" class="form-control" [class.is-invalid]="fieldInvalid('birthDate')"
+          formControlName="birthDate" id="birthDate">
+        <div class="invalid-feedback">La date de naissance est obligatoire.</div>
+      </div>
 
-  <label>Poids initial</label>
-  <input type="number" formControlName="initialWeightKg">
+      <div class="col-md-6">
+        <label for="phone" class="form-label">Telephone</label>
+        <input type="tel" class="form-control" [class.is-invalid]="fieldInvalid('phone')" formControlName="phone"
+          id="phone" placeholder="Ex: 06 .......">
+        <div class="invalid-feedback">Le telephone est obligatoire.</div>
+      </div>
 
-  <label>Objectif</label>
-  <textarea type="text" formControlName="objective"></textarea>
+      <div class="col-md-3">
+        <label for="heightCm" class="form-label">Taille en cm</label>
+        <input type="number" class="form-control" [class.is-invalid]="fieldInvalid( 'heightCm')"
+          formControlName="heightCm" id="heightCm" min="1" step="0.1" placeholder="Ex: 168">
+        <div class="invalid-feedback">La taille doit etre positive.</div>
+      </div>
 
-  <button type="submit">Enregistrer</button>
-</form>
+      <div class="col-md-3">
+        <label for="initialWeightKg" class="form-label">Poids initial (kg)</label>
+        <input type="number" class="form-control" [class.is-invalid]="fieldInvalid('initialWeightKg')"
+          formControlName="initialWeightKg" id="initialWeightKg" min="1" step="0.1" placeholder="Ex: 72.5">
+        <div class="invalid-feedback">Le poids doit etre positif.</div>
+      </div>
 
-<!-- template -->
-<button (click)="goToListPatient()" class="btn btn-primary">
-  <i class="fas fa-plus"></i> List des Patients
-</button>
+      <div class="col-12">
+        <label for="objective" class="form-label">Objectif</label>
+        <textarea class="form-control" formControlName="objective" id="objective" rows="3"
+          placeholder="Ex: Perte de poids, prise de masse, maintien..."></textarea>
+      </div>
 
+      <div class="col-12 form-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="loading">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+          {{ isEditMode ? 'Modifier' : 'Enregistrer' }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

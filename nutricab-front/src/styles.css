@@ -1,1 +1,65 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global application styles */
+body {
+  margin: 0;
+  background: #f6f8fb;
+  color: #1f2937;
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #102033;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+.table {
+  color: #263241;
+  font-size: 0.95rem;
+}
+
+.table thead th {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.btn {
+  font-weight: 600;
+}
+
+/* Alertify global styles */
+.alertify .ajs-header {
+  background-color: #2563eb;
+  color: #fff;
+  font-weight: 700;
+}
+
+.alertify .ajs-body {
+  color: #1f2937;
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+}
+
+.alertify .ajs-button.ajs-ok {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+}
+
+.alertify .ajs-button.ajs-cancel {
+  background-color: #6c757d;
+  color: #fff;
+  border: none;
+}
