@@ -127,4 +127,8 @@ export class AppointmentFormComponent {
     const field = this.appointmentForm.get(fieldName);
     return !!(field && field.invalid && (field.touched || this.submitted));
   } 
+
+  cancel(): void {
+    this.router.navigate(['/appointments']);
+  }
 }

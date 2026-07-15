@@ -1,11 +1,11 @@
 <div class="mt-4 div-page">
     <div class="page-header-1">
-        <h2><i class="fas fa-calendar-check"></i> Liste des rendez-vous</h2>
+        <h2><i class="fas fa-utensils"></i> Liste des plans alimentaires</h2>
     </div>
     <div class="filtre-toolbar">
         <div class="filtre-filters">
             <div class="search-bar input-group">
-                <input type="search" class="form-control" placeholder="Rechercher par patient, notes ou statut..."
+                <input type="search" class="form-control" placeholder="Rechercher un plan alimentaire..."
                     [(ngModel)]="searchTerm" (input)="onSearchInput($event)" (keyup.enter)="onSearch()">
                 <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
                     Rechercher
@@ -90,7 +90,7 @@
                     <th>Objectif</th>
                     <th>Calories</th>
                     <th>Contenu</th>
-                    <th class="text-end">Actions</th>
+                    <th class="text-end"></th>
                 </tr>
             </thead>
             <tbody>
@@ -100,7 +100,9 @@
                     <td>{{ item.title }}</td>
                     <td>{{ item.objective }}</td>
                     <td>{{ item.calories }}</td>
-                    <td>{{ item.content }}</td>
+                    <td>
+                        <div class="meal-content-preview">{{ item.content }}</div>
+                    </td>
                     <td class="text-end">
                         <button class="btn btn-outline-warning btn-sm me-2" title="Modifier"
                             (click)="editConsultation(item.id)">
@@ -114,7 +116,7 @@
                 </tr>
                 } @empty {
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">Aucun rendez-vous trouvé</td>
+                    <td colspan="6" class="text-center text-muted py-4">Aucun plan alimentaire trouve</td>
                 </tr>
                 }
             </tbody>

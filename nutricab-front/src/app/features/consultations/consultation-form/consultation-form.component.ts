@@ -134,4 +134,7 @@ export class ConsultationFormComponent {
     return !!(field && field.invalid && (field.touched || this.submitted));
   }
 
+  cancel(): void {
+    this.router.navigate(['/consultations']);
+  }
 }

@@ -4,6 +4,7 @@
             <i class="fas fa-user-plus"></i>
             {{ isEditMode ? 'Modifier la consultation' : 'Ajouter une consultation' }}
         </h2>
+        <button class="btn-close" type="button" aria-label="Fermer" (click)="cancel()"></button>
     </div>
 
     <form class="div-form" [formGroup]="consultationForm" (ngSubmit)="saveConsultation()" novalidate>
@@ -60,6 +61,9 @@
 
 
             <div class="col-12 form-actions">
+                <button class="btn btn-outline-secondary" type="button" (click)="cancel()">
+                    Annuler
+                </button>
                 <button class="btn btn-primary" type="submit" [disabled]="loading">
                     <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
                     {{ isEditMode ? 'Modifier' : 'Enregistrer' }}

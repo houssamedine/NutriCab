@@ -1,30 +1,30 @@
 .meal-plan-table {
   table-layout: fixed;
-  min-width: 900px;
+  min-width: 1040px;
 }
 
 .meal-plan-table .col-patient {
-  width: 13%;
+  width: 16%;
 }
 
 .meal-plan-table .col-titre {
-  width: 17%;
+  width: 20%;
 }
 
 .meal-plan-table .col-objective {
-  width: 17%;
+  width: 20%;
 }
 
 .meal-plan-table .col-calories {
-  width: 5%;
+  width: 8%;
 }
 
 .meal-plan-table .col-content {
-  width: 28%;
+  width: 26%;
 }
 
 .meal-plan-table .col-actions {
-  width: 8%;
+  width: 10%;
 }
 
 .meal-plan-table th,
@@ -36,34 +36,17 @@
 
 .meal-plan-table td.text-end {
   white-space: nowrap;
-
 }
 
-.meal-plan-table .col-waist {
-  width: 7%;
-}
-
-.meal-plan-table .col-notes {
-  width: 27%;
-}
-
-.meal-plan-table .col-recommendations {
-  width: 27%;
-}
-
-.meal-plan-table .col-actions {
-  width: 8%;
-}
-
-.meal-plan-table th,
-.meal-plan-table td {
-  white-space: normal;
-  vertical-align: middle;
-  word-break: break-word;
-}
-
-.meal-plan-table td.text-end {
-  white-space: nowrap;
+.meal-plan-table .meal-content-preview {
+  color: #475569;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  max-height: 5.1rem;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
 }
 
 .filter-field {
@@ -75,11 +58,11 @@
   top: calc(100% + 0.5rem);
   left: 0;
   z-index: 20;
-  width: 360px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  width: 340px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
   border-radius: 8px;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--app-shadow);
 }
 
 .filter-popover-header,
@@ -92,7 +75,7 @@
 }
 
 .filter-popover-header {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--app-border);
 }
 
 .filter-popover-header h3 {
@@ -107,7 +90,7 @@
 }
 
 .filter-popover-actions {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--app-border);
 }
 
 .calories-filter {

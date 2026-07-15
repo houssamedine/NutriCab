@@ -6,7 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MealplanningService } from '../../../core/services/mealplanning.service';
 import { PatientsService } from '../../../core/services/patients.service';
 import { AlertService } from '../../../shared/Alertify/alert-service.service';
-import { MealPlan, CreateMealPlanRequest } from '../../../core/models/meal-plan.model';
+import { CreateMealPlanRequest } from '../../../core/models/meal-plan.model';
 
 @Component({
   selector: 'app-meal-plan-form',
@@ -123,5 +123,8 @@ export class MealPlanFormComponent {
     return !!(field && field.invalid && (field.touched || this.submitted));
   }
 
+  cancel(): void {
+    this.router.navigate(['/meal-plans']);
+  }
 
 }

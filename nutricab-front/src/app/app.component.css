@@ -1,4 +1,11 @@
 :host {
   display: block;
   margin-left: 240px;
+  min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+  :host {
+    margin-left: 0;
+  }
 }

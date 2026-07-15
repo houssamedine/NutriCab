@@ -113,4 +113,8 @@ export class PatientFormComponent {
     const field = this.patientForm.get(fieldName);
     return !!field && field.invalid && (field.touched || this.submitted);
   }
+
+  cancel(): void {
+    this.router.navigate(['/patients']);
+  }
 }
