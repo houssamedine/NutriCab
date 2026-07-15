@@ -11,7 +11,7 @@ import { PatientsService } from '../../core/services/patients.service';
 @Component({
   selector: 'app-appointments',
   standalone: true,
-  imports: [ReactiveFormsModule,CommonModule,FormsModule],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule],
   templateUrl: './appointments.component.html',
   styleUrl: './appointments.component.css'
 })
@@ -73,10 +73,10 @@ export class AppointmentsComponent {
   }
 
   /**Supprimer un rendez-vous */
-  deleteAppointment(id: number): void { 
+  deleteAppointment(id: number): void {
     this.alertService.confirm(
       'Confirmer la suppression',
-      'Etes-vous sur de vouloir supprimer ce rendez-vous ? Cette action est irreversible.', 
+      'Etes-vous sur de vouloir supprimer ce rendez-vous ? Cette action est irreversible.',
       () => {
         this.appointmentsService.deleteAppointment(id).subscribe({
           next: () => {
@@ -88,11 +88,11 @@ export class AppointmentsComponent {
           }
         });
       }
-    );  
+    );
   }
 
   /**Recherche de rendez-vous par mot-clé */
-  onSearchInput(event: Event): void { 
+  onSearchInput(event: Event): void {
     const keyword = (event.target as HTMLInputElement).value.trim();
 
     if (!keyword) {
@@ -100,9 +100,9 @@ export class AppointmentsComponent {
       this.loadAppointments();
     }
   }
-  
+
   /** Recherche de rendez-vous par mot-clé */
-  onSearch(): void { 
+  onSearch(): void {
     this.loading = true;
     this.errorMessage = '';
     const keyword = this.searchTerm.trim();
@@ -111,7 +111,7 @@ export class AppointmentsComponent {
       this.loadAppointments();
       return;
     }
-     this.appointmentsService.searchAppointments(keyword).subscribe({
+    this.appointmentsService.searchAppointments(keyword).subscribe({
       next: (data) => {
         this.appointments = data;
         this.loading = false;
@@ -124,25 +124,25 @@ export class AppointmentsComponent {
   }
 
   filtrerByPatient(patientId: string): void {
-  this.errorMessage = '';
+    this.errorMessage = '';
 
-  if (!patientId) {
-    this.loadAppointments();
-    return;
+    if (!patientId) {
+      this.loadAppointments();
+      return;
+    }
+
+    this.loading = true;
+
+    this.appointmentsService.getAppointmentsByPatientId(Number(patientId)).subscribe({
+      next: (data) => {
+        this.appointments = data;
+        this.loading = false;
+      },
+      error: () => {
+        this.errorMessage = 'Erreur lors du filtrage par patient';
+        this.loading = false;
+      }
+    });
   }
 
-  this.loading = true;
-
-  this.appointmentsService.getAppointmentsByPatientId(Number(patientId)).subscribe({
-    next: (data) => {
-      this.appointments = data;
-      this.loading = false;
-    },
-    error: () => {
-      this.errorMessage = 'Erreur lors du filtrage par patient';
-      this.loading = false;
-    }
-  });
-}
-  
 }

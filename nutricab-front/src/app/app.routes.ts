@@ -9,6 +9,7 @@ import { ConsultationsComponent } from './features/consultations/consultations.c
 import { ConsultationFormComponent } from './features/consultations/consultation-form/consultation-form.component';
 import { MealPlanningComponent } from './features/meal-planning/meal-planning.component';
 import { UsersComponent } from './features/users/users.component';
+import { MealPlanFormComponent } from './features/meal-planning/meal-plan-form/meal-plan-form.component';
 
 export const routes: Routes = [
   { path:'login', component: LoginComponent },
@@ -23,8 +24,8 @@ export const routes: Routes = [
   { path:'consultations/new', component:ConsultationFormComponent},
   { path:'consultations/edit/:id', component:ConsultationFormComponent},
   { path:'meal-plans',component:MealPlanningComponent},
-  { path:'meal-plans/new', component:MealPlanningComponent},
-  { path:'meal-plans/edit/:id', component:MealPlanningComponent},
+  { path:'meal-plans/new', component:MealPlanFormComponent},
+  { path:'meal-plans/edit/:id', component:MealPlanFormComponent},
   { path:'users',component:UsersComponent},
   { path:'users/new', component:UsersComponent},
   { path:'users/edit/:id', component:UsersComponent},

@@ -91,6 +91,22 @@ public class MealPlanServiceImpl implements MealPlanService{
     }
 
     @Override
+    public Page<MealPlanDto> searchMealPlans(String keyword, Pageable pageable) {
+        String cleanedKeyword = keyword == null ? "" : keyword.trim();
+        Integer calories = parseCalories(cleanedKeyword);
+
+        if (!currentUserService.isAdmin()) {
+            return currentUserService.getCurrentUserId()
+                    .map(userId -> mealPlanRepository.searchByPatientUserId(cleanedKeyword, calories, userId, pageable))
+                    .orElseGet(() -> Page.empty(pageable))
+                    .map(MealPlanMapper::toDto);
+        }
+
+        return mealPlanRepository.search(cleanedKeyword, calories, pageable)
+                .map(MealPlanMapper::toDto);
+    }
+
+    @Override
     public Page<MealPlanDto> getMealPlansByCalorieRange(Integer minCalories, Integer maxCalories, Pageable pageable) {
         if (!currentUserService.isAdmin()) {
             return currentUserService.getCurrentUserId()
@@ -121,5 +137,13 @@ public class MealPlanServiceImpl implements MealPlanService{
 
         return patientRepository.findById(patientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient introuvable"));
+    }
+
+    private Integer parseCalories(String keyword) {
+        try {
+            return Integer.valueOf(keyword);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }

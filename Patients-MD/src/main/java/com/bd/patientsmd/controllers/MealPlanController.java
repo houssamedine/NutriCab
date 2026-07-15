@@ -61,8 +61,8 @@ public class MealPlanController {
 
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'NUTRITIONIST', 'PATIENT')")
-    public Page<MealPlanDto> getMealPlansByObjective(@RequestParam String objective, Pageable pageable){
-        return planService.getMealPlansByObjective(objective, pageable);
+    public Page<MealPlanDto> searchMealPlans(@RequestParam String keyword, Pageable pageable){
+        return planService.searchMealPlans(keyword, pageable);
     }
 
     @GetMapping("/calories")

@@ -13,6 +13,7 @@ public interface MealPlanService {
     void deleteMealPlan(Long id);
     Page<MealPlanDto> getMealPlansByPatient(Long patientId, Pageable pageable);
     Page<MealPlanDto> getMealPlansByObjective(String objective, Pageable pageable);
+    Page<MealPlanDto> searchMealPlans(String keyword, Pageable pageable);
     Page<MealPlanDto> getMealPlansByCalorieRange(Integer minCalories, Integer maxCalories, Pageable pageable);
     MealPlanDto getActiveMealPlanByPatient(Long patientId);
 }

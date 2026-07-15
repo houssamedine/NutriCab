@@ -1,0 +1,62 @@
+<div class="div-form-page">
+    <div class="page-header">
+        <h2>
+            <i class="fas fa-user-plus"></i>
+            {{ isEditMode ? 'Modifier le plan alimentaire' : 'Ajouter un plan alimentaire' }}
+        </h2>
+    </div>
+
+    <form class="div-form" [formGroup]="mealPlanForm" (ngSubmit)="saveMealPlan()" novalidate>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="patientId" class="form-label">Patient</label>
+
+                <select class="form-select" [class.is-invalid]="fieldInvalid('patientId')" formControlName="patientId"
+                    id="patientId">
+                    <option value="">Selectionner un patient</option>
+
+                    @for (patient of patients; track patient.id) {
+                    <option [value]="patient.id">
+                        {{ patient.fullName }}
+                    </option>
+                    }
+                </select>
+                <div class="invalid-feedback">Le patient est obligatoire.</div>
+
+            </div>
+
+            <div class="col-md-6">
+                <label for="title" class="form-label">Titre</label>
+                <input type="text" class="form-control" [class.is-invalid]="fieldInvalid('title')" formControlName="title"
+                    id="title">
+                <div class="invalid-feedback">Le titre est obligatoire.</div>
+            </div>
+
+             <div class="col-6">
+                <label for="objective" class="form-label">Objectif</label>
+                <input type="text" class="form-control" [class.is-invalid]="fieldInvalid('objective')" formControlName="objective"
+                    id="objective" placeholder="Ex: Perte de poids">
+                <div class="invalid-feedback">L'objectif est obligatoire.</div>
+            </div>
+
+            <div class="col-6">
+                <label for="calories" class="form-label">Calories</label>
+                <input type="number" class="form-control" [class.is-invalid]="fieldInvalid('calories')" formControlName="calories"
+                    id="calories" placeholder="Ex: 2000">
+                <div class="invalid-feedback">Les calories sont obligatoires.</div>
+            </div>
+
+            <div class="col-12">
+                <label for="content" class="form-label">Contenu</label>
+                <textarea class="form-control" formControlName="content" id="content" rows="3"
+                    placeholder="Ex: Contenu du plan de repas..."></textarea>
+            </div>
+            <div class="col-12 form-actions">
+                <button class="btn btn-primary" type="submit" [disabled]="loading">
+                    <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    {{ isEditMode ? 'Modifier' : 'Enregistrer' }}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
