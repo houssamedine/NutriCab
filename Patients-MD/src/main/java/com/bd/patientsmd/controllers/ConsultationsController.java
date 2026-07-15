@@ -1,5 +1,6 @@
 package com.bd.patientsmd.controllers;
 
+import com.bd.patientsmd.models.dtos.AppointmentDto;
 import com.bd.patientsmd.models.dtos.ConsultationsDto;
 import com.bd.patientsmd.models.requests.CreateConsultationRequest;
 import com.bd.patientsmd.services.ConsultationsService;
@@ -71,6 +72,12 @@ public class ConsultationsController {
     @PreAuthorize("hasAnyRole('ADMIN', 'NUTRITIONIST', 'PATIENT')")
     public List<ConsultationsDto> getRecentConsultations(){
         return consultationsService.getRecentConsultations();
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'NUTRITIONIST', 'SECRETARY', 'PATIENT')")
+    public Page<ConsultationsDto> searchConsultations(@RequestParam String keyword, Pageable pageable){
+        return consultationsService.searchConsultations(keyword, pageable);
     }
 
 

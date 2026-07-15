@@ -82,17 +82,26 @@ public class AppointmentServiceImpl  implements AppointmentService{
     }
 
     @Override
-    public Page<AppointmentDto> findByStatus(String keyword, Pageable pageable) {
-        AppointmentStatus status = AppointmentStatus.valueOf(keyword.toUpperCase());
+    public Page<AppointmentDto> searchAppointments(String keyword, Pageable pageable) {
+        String cleanedKeyword = keyword == null ? "" : keyword.trim();
+        AppointmentStatus status = parseStatus(cleanedKeyword);
 
         if (!currentUserService.isAdmin() && !currentUserService.isSecretary()) {
             return currentUserService.getCurrentUserId()
-                    .map(userId -> appointmentRepository.findByStatusAndPatientUserId(status, userId, pageable))
+                    .map(userId -> appointmentRepository.searchByPatientUserId(cleanedKeyword, status, userId, pageable))
                     .orElseGet(() -> Page.empty(pageable))
                     .map(AppointmentMapper::toDto);
         }
 
-        return appointmentRepository.findByStatus(status, pageable)
+        return appointmentRepository.search(cleanedKeyword, status, pageable)
                 .map(AppointmentMapper::toDto);
+    }
+
+    private AppointmentStatus parseStatus(String keyword) {
+        try {
+            return AppointmentStatus.valueOf(keyword.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 }

@@ -16,4 +16,5 @@ public interface ConsultationsService {
     Page<ConsultationsDto> getConsultationsByPatient(Long patientId, Pageable pageable);
     List<ConsultationsDto> getWeightHistoryByPatient(Long patientId);
     List<ConsultationsDto> getRecentConsultations();
+    Page<ConsultationsDto> searchConsultations(String keyword, Pageable pageable);
 }

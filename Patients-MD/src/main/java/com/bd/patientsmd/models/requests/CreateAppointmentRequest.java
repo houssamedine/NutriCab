@@ -1,6 +1,6 @@
 package com.bd.patientsmd.models.requests;
 
-import jakarta.validation.constraints.Future;
+import com.bd.patientsmd.models.enums.AppointmentStatus;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
@@ -10,8 +10,9 @@ public record CreateAppointmentRequest(
         Long patientId,
 
         @NotNull(message = "La date du rendez-vous est obligatoire")
-        @Future(message = "La date doit être dans le futur")
         LocalDateTime appointmentDate,
+
+        AppointmentStatus status,
 
         String notes
 ) {}

@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
@@ -25,8 +27,6 @@ public class ConsultationsServiceImpl implements ConsultationsService{
     private final ConsultationRepository consultationRepository;
     private final PatientRepository patientRepository;
     private final CurrentUserService currentUserService;
-
-
 
     @Override
     public ConsultationsDto createConsultation(CreateConsultationRequest request) {
@@ -111,5 +111,44 @@ public class ConsultationsServiceImpl implements ConsultationsService{
                 .stream()
                 .map(ConsultationMapper::toDto)
                 .toList();
+    }
+
+    @Override
+    public Page<ConsultationsDto> searchConsultations(String keyword, Pageable pageable) {
+        String cleanedKeyword = keyword == null ? "" : keyword.trim();
+        LocalDate consultationDate = parseDate(cleanedKeyword);
+        Double numericValue = parseNumber(cleanedKeyword);
+
+        if (!currentUserService.isAdmin()) {
+            return currentUserService.getCurrentUserId()
+                    .map(userId -> consultationRepository.searchByPatientUserId(
+                            cleanedKeyword,
+                            consultationDate,
+                            numericValue,
+                            userId,
+                            pageable
+                    ))
+                    .orElseGet(() -> Page.empty(pageable))
+                    .map(ConsultationMapper::toDto);
+        }
+
+        return consultationRepository.search(cleanedKeyword, consultationDate, numericValue, pageable)
+                .map(ConsultationMapper::toDto);
+    }
+
+    private LocalDate parseDate(String keyword) {
+        try {
+            return LocalDate.parse(keyword);
+        } catch (DateTimeParseException ex) {
+            return null;
+        }
+    }
+
+    private Double parseNumber(String keyword) {
+        try {
+            return Double.valueOf(keyword.replace(',', '.'));
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }

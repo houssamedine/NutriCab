@@ -44,7 +44,7 @@ public class AppointmentMapper {
         return Appointments.builder()
                 .patient(patient)
                 .appointmentDate(request.appointmentDate())
-                .status(AppointmentStatus.PLANNED)
+                .status(request.status() != null ? request.status() : AppointmentStatus.PLANNED)
                 .notes(request.notes())
                 .build();
     }
@@ -54,6 +54,9 @@ public class AppointmentMapper {
 
         appointment.setPatient(patient);
         appointment.setAppointmentDate(request.appointmentDate());
+        if (request.status() != null) {
+            appointment.setStatus(request.status());
+        }
         appointment.setNotes(request.notes());
     }
 

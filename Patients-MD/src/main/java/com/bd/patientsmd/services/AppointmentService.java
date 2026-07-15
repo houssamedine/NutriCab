@@ -13,5 +13,5 @@ public interface AppointmentService {
     AppointmentDto getAppointmentById(Long id);
     Page<AppointmentDto> getPatientById(Long id, Pageable pageable);
     void deleteAppointment(Long id);
-    Page<AppointmentDto> findByStatus(String keyword, Pageable pageable);
+    Page<AppointmentDto> searchAppointments(String keyword, Pageable pageable);
 }
