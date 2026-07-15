@@ -1,0 +1,84 @@
+<div class="div-form-page">
+    <div class="page-header">
+        <h2>
+            <i class="fas fa-user-plus"></i>
+            {{ isEditMode ? 'Modifier le rendez-vous' : 'Ajouter un rendez-vous' }}
+        </h2>
+    </div>
+
+    <form class="div-form" [formGroup]="appointmentForm" (ngSubmit)="saveAppointment()" novalidate>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="patientId" class="form-label">Patient</label>
+
+                <select class="form-select" [class.is-invalid]="fieldInvalid('patientId')" formControlName="patientId"
+                    id="patientId">
+                    <option value="">Selectionner un patient</option>
+
+                    @for (patient of patients; track patient.id) {
+                    <option [value]="patient.id">
+                        {{ patient.fullName }}
+                    </option>
+                    }
+                </select>
+
+                <div class="invalid-feedback">Le patient est obligatoire.</div>
+
+            </div>
+
+            <div class="col-md-6">
+                <label for="appointmentDate" class="form-label">Date et heure du rendez-vous</label>
+                <input type="datetime-local" class="form-control" [class.is-invalid]="fieldInvalid('appointmentDate')"
+                    formControlName="appointmentDate" id="appointmentDate">
+                <div class="invalid-feedback">La date du rendez-vous est obligatoire.</div>
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label d-block">Status</label>
+
+                <div class="status-options" [class.is-invalid]="fieldInvalid('status')">
+                    <div class="form-check status-option">
+                        <input class="form-check-input" type="radio" id="statusPlanned" value="PLANNED"
+                            formControlName="status">
+                        <label class="form-check-label" for="statusPlanned">
+                            Planifie
+                        </label>
+                    </div>
+
+                    <div class="form-check status-option">
+                        <input class="form-check-input" type="radio" id="statusDone" value="DONE"
+                            formControlName="status">
+                        <label class="form-check-label" for="statusDone">
+                            Termine
+                        </label>
+                    </div>
+
+                    <div class="form-check status-option">
+                        <input class="form-check-input" type="radio" id="statusCancelled" value="CANCELLED"
+                            formControlName="status">
+                        <label class="form-check-label" for="statusCancelled">
+                            Annule
+                        </label>
+                    </div>
+                </div>
+
+                <div class="text-danger small mt-1" *ngIf="fieldInvalid('status')">
+                    Le status est obligatoire.
+                </div>
+            </div>
+
+            <div class="col-12">
+                <label for="notes" class="form-label">Notes</label>
+                <textarea class="form-control" formControlName="notes" id="notes" rows="3"
+                    placeholder="Ex: Notes sur le rendez-vous..."></textarea>
+            </div>
+
+            <div class="col-12 form-actions">
+                <button class="btn btn-primary" type="submit" [disabled]="loading">
+                    <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    {{ isEditMode ? 'Modifier' : 'Enregistrer' }}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

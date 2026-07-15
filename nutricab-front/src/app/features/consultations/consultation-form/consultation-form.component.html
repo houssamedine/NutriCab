@@ -1,0 +1,70 @@
+<div class="div-form-page">
+    <div class="page-header">
+        <h2>
+            <i class="fas fa-user-plus"></i>
+            {{ isEditMode ? 'Modifier la consultation' : 'Ajouter une consultation' }}
+        </h2>
+    </div>
+
+    <form class="div-form" [formGroup]="consultationForm" (ngSubmit)="saveConsultation()" novalidate>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="patientId" class="form-label">Patient</label>
+
+                <select class="form-select" [class.is-invalid]="fieldInvalid('patientId')" formControlName="patientId"
+                    id="patientId">
+                    <option value="">Selectionner un patient</option>
+
+                    @for (patient of patients; track patient.id) {
+                    <option [value]="patient.id">
+                        {{ patient.fullName }}
+                    </option>
+                    }
+                </select>
+                <div class="invalid-feedback">Le patient est obligatoire.</div>
+
+            </div>
+
+            <div class="col-md-6">
+                <label for="consultationDate" class="form-label">Date et heure de la consultation</label>
+                <input type="datetime-local" class="form-control" [class.is-invalid]="fieldInvalid('consultationDate')"
+                    formControlName="consultationDate" id="consultationDate">
+                <div class="invalid-feedback">La date de la consultation est obligatoire.</div>
+            </div>
+
+             <div class="col-12">
+                <label for="weightKg" class="form-label">Poids (kg)</label>
+                <input type="number" class="form-control" [class.is-invalid]="fieldInvalid('weightKg')" formControlName="weightKg"
+                    id="weightKg" placeholder="Ex: 70">
+                <div class="invalid-feedback">Le poids est obligatoire.</div>
+            </div>
+
+            <div class="col-12">
+                <label for="waistCm" class="form-label">Tour de taille (cm)</label>
+                <input type="number" class="form-control" [class.is-invalid]="fieldInvalid('waistCm')" formControlName="waistCm"
+                    id="waistCm" placeholder="Ex: 80">
+                <div class="invalid-feedback">Le tour de taille est obligatoire.</div>
+            </div>
+
+            <div class="col-12">
+                <label for="notes" class="form-label">Notes</label>
+                <textarea class="form-control" formControlName="notes" id="notes" rows="3"
+                    placeholder="Ex: Notes sur la consultation..."></textarea>
+            </div>
+             <div class="col-12">
+                <label for="recommendations" class="form-label">Recommandations</label>
+                <textarea class="form-control" formControlName="recommendations" id="recommendations" rows="3"
+                    placeholder="Ex: Recommandations pour la consultation..."></textarea>
+            </div>
+
+
+
+            <div class="col-12 form-actions">
+                <button class="btn btn-primary" type="submit" [disabled]="loading">
+                    <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    {{ isEditMode ? 'Modifier' : 'Enregistrer' }}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

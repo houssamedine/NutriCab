@@ -23,6 +23,7 @@ a {
   text-decoration: none;
 }
 
+
 .table {
   color: #263241;
   font-size: 0.95rem;
@@ -62,4 +63,142 @@ a {
   background-color: #6c757d;
   color: #fff;
   border: none;
+}
+
+.div-page {
+  padding-bottom: 2rem;
+  width: 90%;
+  margin: 0 auto;
+}
+
+.div-form-page {
+  max-width: 90%;
+  margin: 2rem auto;
+  padding: 0 1rem 2rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2rem 0 1.25rem;
+}
+.page-header-1 {
+  display: flex;
+  align-items: center;
+  /* justify-content: space-between; */
+  gap: 1rem;
+  margin: 2rem 0 1.25rem;
+}
+
+.page-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.search-bar {
+  max-width: 520px;
+}
+
+.table-responsive {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.div-form {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.form-label {
+  color: #334155;
+  font-weight: 600;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .page-header,
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+/** Filtre button styles */
+.filtre-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2rem 0 1.25rem;
+}
+
+.filtre-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.filtre-filters .search-bar {
+  width: min(520px, 100%);
+  max-width: 520px;
+}
+
+.filter-field {
+  width: 240px;
+  flex: 0 0 240px;
+}
+
+.filter-field .form-label {
+  margin-bottom: 0.35rem;
+}
+
+.filtre-actions {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 992px) {
+  .filtre-toolbar,
+  .filtre-filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filtre-actions {
+    align-self: flex-end;
+  }
+
+  .filtre-filters .search-bar,
+  .filter-field {
+    width: 100%;
+    max-width: none;
+    flex-basis: auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .filtre-actions,
+  .filtre-actions .btn {
+    width: 100%;
+  }
 }

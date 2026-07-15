@@ -61,7 +61,7 @@ public class AppointmentsController {
 
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'NUTRITIONIST', 'SECRETARY', 'PATIENT')")
-    public Page<AppointmentDto> findByStatus(@RequestParam String keyword, Pageable pageable){
-        return appointmentService.findByStatus(keyword, pageable);
+    public Page<AppointmentDto> searchAppointments(@RequestParam String keyword, Pageable pageable){
+        return appointmentService.searchAppointments(keyword, pageable);
     }
 }

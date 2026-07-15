@@ -1,4 +1,4 @@
-<div class="patient-form-page">
+<div class="div-form-page">
   <div class="page-header">
     <h2>
       <i class="fas fa-user-plus"></i>
@@ -6,11 +6,7 @@
     </h2>
   </div>
 
-  <div *ngIf="errorMessage" class="alert alert-danger">
-    {{ errorMessage }}
-  </div>
-
-  <form class="patient-form" [formGroup]="patientForm" (ngSubmit)="savePatient()" novalidate>
+  <form class="div-form" [formGroup]="patientForm" (ngSubmit)="savePatient()" novalidate>
     <div class="row g-3">
       <div class="col-md-6">
         <label for="fullName" class="form-label">Nom complet</label>

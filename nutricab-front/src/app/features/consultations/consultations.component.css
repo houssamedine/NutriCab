@@ -1,0 +1,43 @@
+.consultations-table {
+  table-layout: fixed;
+  min-width: 900px;
+}
+
+.consultations-table .col-patient {
+  width: 19%;
+}
+
+.consultations-table .col-date {
+  width: 15%;
+}
+
+.consultations-table .col-weight {
+  width: 7%;
+}
+
+.consultations-table .col-waist {
+  width: 7%;
+}
+
+.consultations-table .col-notes {
+  width: 27%;
+}
+
+.consultations-table .col-recommendations {
+  width: 27%;
+}
+
+.consultations-table .col-actions {
+  width: 8%;
+}
+
+.consultations-table th,
+.consultations-table td {
+  white-space: normal;
+  vertical-align: middle;
+  word-break: break-word;
+}
+
+.consultations-table td.text-end {
+  white-space: nowrap;
+}

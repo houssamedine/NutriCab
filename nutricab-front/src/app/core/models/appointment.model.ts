@@ -17,5 +17,6 @@ export interface Appointment{
 export interface CreateAppointmentRequest{
   patientId:number,
   appointmentDate:string,
+  status:AppointmentStatus,
   notes:string
 }

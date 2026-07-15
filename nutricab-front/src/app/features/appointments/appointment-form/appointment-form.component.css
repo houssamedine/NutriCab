@@ -1,0 +1,40 @@
+.status-options {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-height: 38px;
+}
+
+.status-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #d7dde6;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.status-option .form-check-input {
+  float: none;
+  margin: 0;
+}
+
+.status-option .form-check-label {
+  color: #334155;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-option:has(.form-check-input:checked) {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.status-options.is-invalid .status-option {
+  border-color: #dc3545;
+}
