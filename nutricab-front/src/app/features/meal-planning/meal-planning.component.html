@@ -73,7 +73,7 @@
             </button>
         </div>
     </div>
-    <div class="table-responsive" *ngIf="!loading">
+    <div class="table-responsive">
         <table class="table table-striped table-hover align-middle meal-plan-table">
             <colgroup>
                 <col class="col-patient">
@@ -94,6 +94,8 @@
                 </tr>
             </thead>
             <tbody>
+                <tr appTableLoading [loading]="loading" [colspan]="6"></tr>
+                @if (!loading) {
                 @for (item of mainPlans; track item.id) {
                 <tr>
                     <td class="fw-bold">{{ item.patient.fullName }}</td>
@@ -119,7 +121,9 @@
                     <td colspan="6" class="text-center text-muted py-4">Aucun plan alimentaire trouve</td>
                 </tr>
                 }
+                }
             </tbody>
         </table>
     </div>
+    <app-pagination [page]="page" (pageChange)="onPageChange($event)"></app-pagination>
 </div>

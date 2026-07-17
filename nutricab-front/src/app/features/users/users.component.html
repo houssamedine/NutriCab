@@ -1,1 +1,123 @@
-<p>users works!</p>
+<div class="mt-4 div-page">
+    <div class="page-header-1">
+        <h2><i class="fas fa-calendar-check"></i> Liste des rendez-vous</h2>
+    </div>
+    <div class="filtre-toolbar">
+        <div class="filtre-filters">
+            <div class="search-bar input-group">
+                <input type="search" class="form-control" placeholder="Rechercher un plan alimentaire..."
+                    [(ngModel)]="searchTerm" (input)="onSearchInput($event)" (keyup.enter)="onSearch()">
+                <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
+                    Rechercher
+                </button>
+            </div>
+            <div class="filter-field">
+                <button class="btn btn-outline-secondary" type="button" (click)="openFilterModal()">
+                    <i class="fas fa-filter"></i> Filtre
+                </button>
+
+                @if (filterModalOpen) {
+                <div class="filter-popover">
+                    <div class="filter-popover-header">
+                        <h3>Filtrer</h3>
+                        <button class="btn-close" type="button" aria-label="Fermer" (click)="closeFilterModal()"></button>
+                    </div>
+
+                    <div class="filter-popover-body">
+                        <div>
+                            <label class="form-label" for="roleFilter">Role</label>
+                            <select class="form-select" id="roleFilter" [(ngModel)]="selectedRole">
+                                <option value="">Tous les roles</option>
+                                @for (role of userRoles; track role) {
+                                <option [value]="role">
+                                    {{ role }}
+                                </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="form-label" for="activeStatusFilter">Statut</label>
+                            <select class="form-select" id="activeStatusFilter" [(ngModel)]="selectedActiveStatus">
+                                <option value="">Tous</option>
+                                <option value="active">Actif</option>
+                                <option value="inactive">Inactif</option>
+                            </select>
+                        </div>
+                    </div>
+                
+                    <div class="filter-popover-actions">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" (click)="resetFilters()">
+                            Reinitialiser
+                        </button>
+                        <button class="btn btn-primary btn-sm" type="button" (click)="applyFilters()">
+                            Valider
+                        </button>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+         <div class="filtre-actions">
+        <button (click)="goToNewUsers()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nouvelle User
+        </button>
+    </div>
+
+    </div>
+   
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle consultations-table">
+            <colgroup>
+                <col class="col-nom">
+                <col class="col-email">
+                <col class="col-role">
+                <col class="col-active">
+                <col class="col-patient">
+                <col class="col-actions">
+            </colgroup>
+            <thead class="table-light">
+                <tr>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Active</th>
+                    <th>Patient</th>
+                    <th class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr appTableLoading [loading]="loading" [colspan]="6"></tr>
+                @if (!loading) {
+                @for (item of users; track item.id) {
+                <tr>
+                    <td>{{ item.fullName }}</td>
+                    <td>{{ item.email }}</td>
+                    <td>{{ item.role }}</td>
+                    <td>
+                        <span class="status-badge" [ngClass]="item.active ? 'status-active' : 'status-inactive'">
+                            {{ item.active ? 'Actif' : 'Inactif' }}
+                        </span>
+                    </td>
+                    <td>{{ item.patients?.[0]?.fullName || 'Aucun patient' }}</td>
+                    <td class="text-end">
+                        <button class="btn btn-outline-warning btn-sm me-2" title="Modifier"
+                            (click)="editUsers(item.id)">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" title="Supprimer" (click)="deleteUsers(item.id)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                } @empty {
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">Aucun utilisateur trouvé</td>
+                </tr>
+                }
+                }
+            </tbody>
+        </table>
+    </div>
+    <app-pagination [page]="page" (pageChange)="onPageChange($event)"></app-pagination>
+</div>

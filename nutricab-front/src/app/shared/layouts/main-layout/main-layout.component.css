@@ -1,14 +1,9 @@
-:host {
-  display: block;
+.app-layout {
   min-height: 100vh;
 }
 
 .app-content {
   margin-left: 240px;
-  min-height: 100vh;
-}
-
-.auth-content {
   min-height: 100vh;
 }
 

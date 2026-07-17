@@ -1,20 +1,24 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { CreateMealPlanRequest, MealPlan } from '../models/meal-plan.model';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Page } from '../models/user.model';
+import { API_BASE_URL } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MealplanningService {
 
-  apiUrl = 'http://localhost:8182/api/meal-plan';
+  private apiBaseUrl = inject(API_BASE_URL);
+  apiUrl = `${this.apiBaseUrl}/meal-plan`;
 
   constructor(private http: HttpClient) { }
 
-  getAllMealPlans(): Observable<Page<MealPlan>> {
-    return this.http.get<Page<MealPlan>>(this.apiUrl);
+  getAllMealPlans(page: number = 0, size: number = 10, sort: string = 'id,desc'): Observable<Page<MealPlan>> {
+    return this.http.get<Page<MealPlan>>(this.apiUrl, {
+      params: { page, size, sort }
+    });
   }
 
   getMealPlanById(mealPlanId: number): Observable<MealPlan> {
@@ -33,26 +37,29 @@ export class MealplanningService {
     return this.http.delete<void>(`${this.apiUrl}/${mealPlanId}`);
   }
 
-  searchMealPlans(keyword: string): Observable<MealPlan[]> {
-    const params = new HttpParams().set('keyword', keyword.trim());
-    return this.http.get<Page<MealPlan>>(`${this.apiUrl}/search`, { params }).pipe(
-      map(response => response.content)
-    );
+  searchMealPlans(keyword: string, page: number = 0, size: number = 10, sort: string = 'id,desc'): Observable<Page<MealPlan>> {
+    const params = new HttpParams()
+      .set('keyword', keyword.trim())
+      .set('page', page)
+      .set('size', size)
+      .set('sort', sort);
+    return this.http.get<Page<MealPlan>>(`${this.apiUrl}/search`, { params });
   }
 
-  getMealPlansByPatientId(patientId: number): Observable<MealPlan[]> {
-    return this.http.get<Page<MealPlan>>(`${this.apiUrl}/patient/${patientId}`).pipe(
-      map(response => response.content)
-    );
+  getMealPlansByPatientId(patientId: number, page: number = 0, size: number = 10, sort: string = 'id,desc'): Observable<Page<MealPlan>> {
+    return this.http.get<Page<MealPlan>>(`${this.apiUrl}/patient/${patientId}`, {
+      params: { page, size, sort }
+    });
   }
 
-  getMealPlansByCaloriesRange(minCalories: number, maxCalories: number): Observable<MealPlan[]> {
+  getMealPlansByCaloriesRange(minCalories: number, maxCalories: number, page: number = 0, size: number = 10, sort: string = 'calories,asc'): Observable<Page<MealPlan>> {
     const params = new HttpParams()
       .set('minCalories', minCalories.toString())
-      .set('maxCalories', maxCalories.toString());
-    return this.http.get<Page<MealPlan>>(`${this.apiUrl}/calories`, { params }).pipe(
-      map(response => response.content)
-    );
+      .set('maxCalories', maxCalories.toString())
+      .set('page', page)
+      .set('size', size)
+      .set('sort', sort);
+    return this.http.get<Page<MealPlan>>(`${this.apiUrl}/calories`, { params });
   }
 
   getActiveMealPlanByPatientId(patientId: number): Observable<MealPlan> {

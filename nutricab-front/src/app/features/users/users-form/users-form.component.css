@@ -1,0 +1,44 @@
+.separator-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+}
+
+.separator::before,
+.separator::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #2c5282, transparent);
+}
+
+.separator::before {
+  margin-right: 15px;
+}
+
+.separator::after {
+  margin-left: 15px;
+}
+
+.separator span {
+  padding: 8px 20px;
+  color: #2c5282;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  background: white;
+  border: 2px solid #2c5282;
+  border-radius: 25px;
+  white-space: nowrap;
+}

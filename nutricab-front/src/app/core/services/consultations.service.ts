@@ -1,21 +1,23 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Consultation } from '../../core/models/consultation.model';
 import { Page } from '../../core/models/user.model';
+import { API_BASE_URL } from '../config/api.config';
 @Injectable({
   providedIn: 'root'
 })
 export class ConsultationsService {
 
-  private apiUrl = "http://localhost:8182/api/consultations";
+  private apiBaseUrl = inject(API_BASE_URL);
+  private apiUrl = `${this.apiBaseUrl}/consultations`;
 
   constructor(private http: HttpClient) { }
 
-  getAllConsultations(): Observable<Consultation[]> {
-    return this.http.get<Page<Consultation>>(this.apiUrl).pipe(
-      map(response => response.content)
-    );
+  getAllConsultations(page: number = 0, size: number = 10, sort: string = 'consultationDate,desc'): Observable<Page<Consultation>> {
+    return this.http.get<Page<Consultation>>(this.apiUrl, {
+      params: { page, size, sort }
+    });
   }
 
   getConsultationById(id: number): Observable<Consultation> {
@@ -43,7 +45,7 @@ export class ConsultationsService {
     page: number = 0,
     size: number = 20,
     sort: string = 'consultationDate,desc'
-  ): Observable<Consultation[]> {
+  ): Observable<Page<Consultation>> {
     return this.http
       .get<Page<Consultation>>(`${this.apiUrl}/patient/${patientId}`, {
         params: {
@@ -51,8 +53,7 @@ export class ConsultationsService {
           size,
           sort
         }
-      })
-      .pipe(map(response => response.content));
+      });
   }
 
   getWeightHistoryByPatient(patientId: number): Observable<Consultation[]> {
@@ -61,10 +62,12 @@ export class ConsultationsService {
     );
   }
 
-  searchConsultations(keyword: string): Observable<Consultation[]> {
-      const params = new HttpParams().set('keyword', keyword.trim());
-      return this.http.get<Page<Consultation>>(`${this.apiUrl}/search`, { params }).pipe(
-        map(response => response.content)
-      );
+  searchConsultations(keyword: string, page: number = 0, size: number = 10, sort: string = 'consultationDate,desc'): Observable<Page<Consultation>> {
+      const params = new HttpParams()
+        .set('keyword', keyword.trim())
+        .set('page', page)
+        .set('size', size)
+        .set('sort', sort);
+      return this.http.get<Page<Consultation>>(`${this.apiUrl}/search`, { params });
     }
 }

@@ -1,41 +1,52 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Patient } from '../../core/models/patient.model';
 import { PatientsService } from '../../core/services/patients.service';
 import { AlertService } from '../../shared/Alertify/alert-service.service';
+import { Page } from '../../core/models/user.model';
+import { PaginationComponent } from '../../shared/pagination/pagination.component';
+import { TableLoadingComponent } from '../../shared/table-loading/table-loading.component';
 
 @Component({
   selector: 'app-patients',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent, TableLoadingComponent],
   templateUrl: './patients.component.html',
   styleUrl: './patients.component.css'
 })
-export class PatientsComponent {
+export class PatientsComponent implements OnInit {
 
   patients: Patient[] = [];
   searchTerm = '';
-  loading = false;
+  loading = true;
   errorMessage = '';
+  page: Page<Patient> | null = null;
+  pageSize = 10;
+  private readonly platformId = inject(PLATFORM_ID);
 
   constructor(
     private patientService: PatientsService,
     private alertService: AlertService,
     private router: Router
-  ) {
-    this.loadPatients();
+  ) {}
+
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadPatients();
+    }
   }
 
   /**Liste Globale des patients */
-  loadPatients(): void {
+  loadPatients(pageNumber: number = 0): void {
     this.loading = true;
     this.errorMessage = '';
 
-    this.patientService.getAllPatients().subscribe({
-      next: (data) => {
-        this.patients = data;
+    this.patientService.getAllPatients(pageNumber, this.pageSize).subscribe({
+      next: (page) => {
+        this.page = page;
+        this.patients = page.content;
         this.loading = false;
       },
       error: () => {
@@ -55,6 +66,7 @@ export class PatientsComponent {
           next: () => {
             this.patients = this.patients.filter(item => item.id !== id);
             this.alertService.success('Patient supprime avec succes');
+            this.loadCurrentPage();
           },
           error: () => {
             this.errorMessage = 'Erreur lors de la suppression';
@@ -98,9 +110,10 @@ export class PatientsComponent {
       return;
     }
 
-    this.patientService.searchPatients(keyword).subscribe({
-      next: (data) => {
-        this.patients = data;
+    this.patientService.searchPatients(keyword, 0, this.pageSize).subscribe({
+      next: (page) => {
+        this.page = page;
+        this.patients = page.content;
         this.loading = false;
       },
       error: () => {
@@ -108,5 +121,37 @@ export class PatientsComponent {
         this.loading = false;
       }
     });
+  }
+
+  onPageChange(pageNumber: number): void {
+    const keyword = this.searchTerm.trim();
+
+    if (keyword) {
+      this.loading = true;
+      this.errorMessage = '';
+      this.patientService.searchPatients(keyword, pageNumber, this.pageSize).subscribe({
+        next: (page) => {
+          this.page = page;
+          this.patients = page.content;
+          this.loading = false;
+        },
+        error: () => {
+          this.errorMessage = 'Erreur lors de la recherche';
+          this.loading = false;
+        }
+      });
+      return;
+    }
+
+    this.loadPatients(pageNumber);
+  }
+
+  private loadCurrentPage(): void {
+    const currentPage = this.page?.number ?? 0;
+    const pageAfterDelete = currentPage > 0 && this.patients.length === 0
+      ? currentPage - 1
+      : currentPage;
+
+    this.onPageChange(pageAfterDelete);
   }
 }

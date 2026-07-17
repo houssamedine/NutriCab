@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -20,7 +20,8 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -43,7 +44,7 @@ export class LoginComponent {
     this.authService.login({ email, password }).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/patients']);
+        this.router.navigateByUrl(this.getReturnUrl());
       },
       error: (error) => {
         this.loading = false;
@@ -64,5 +65,15 @@ export class LoginComponent {
   get passwordInvalid(): boolean {
     const password = this.loginForm.get('password');
     return !!password && password.invalid && (password.dirty || password.touched);
+  }
+
+  private getReturnUrl(): string {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/patients';
+
+    if (!returnUrl.startsWith('/') || returnUrl.startsWith('//') || returnUrl.startsWith('/login')) {
+      return '/patients';
+    }
+
+    return returnUrl;
   }
 }

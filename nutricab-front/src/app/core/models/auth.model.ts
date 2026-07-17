@@ -4,6 +4,7 @@ export interface LoginRequest{
 }
 
 export interface AuthResponse {
+  accessToken: any;
   fullName: string;
   role: string;
 }

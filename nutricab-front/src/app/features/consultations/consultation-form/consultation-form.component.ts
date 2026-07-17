@@ -57,9 +57,9 @@ export class ConsultationFormComponent {
 
   /** Charge la liste des patients */
   loadPatients(): void {
-    this.patientsService.getAllPatients().subscribe({
-      next: (data) => {
-        this.patients = data;
+    this.patientsService.getAllPatients(0, 100).subscribe({
+      next: (page) => {
+        this.patients = page.content;
       },
       error: () => {
         this.errorMessage = 'Erreur lors du chargement des patients';

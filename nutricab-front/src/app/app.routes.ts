@@ -1,33 +1,90 @@
 import { Routes } from '@angular/router';
-import {PatientsComponent} from './features/patients/patients.component';
-import {PatientFormComponent} from './features/patients/patient-form/patient-form.component';
-import {LoginComponent} from './features/login/login.component';
-import { DashboardComponent } from './features/dashboard/dashboard.component';
-import { AppointmentsComponent } from './features/appointments/appointments.component';
-import { AppointmentFormComponent } from './features/appointments/appointment-form/appointment-form.component';
-import { ConsultationsComponent } from './features/consultations/consultations.component';
-import { ConsultationFormComponent } from './features/consultations/consultation-form/consultation-form.component';
-import { MealPlanningComponent } from './features/meal-planning/meal-planning.component';
-import { UsersComponent } from './features/users/users.component';
-import { MealPlanFormComponent } from './features/meal-planning/meal-plan-form/meal-plan-form.component';
+import { adminGuard } from './core/guards/admin.guard';
+import { authGuard } from './core/guards/auth.guard';
+import { guestGuard } from './core/guards/guest.guard';
+import { MainLayoutComponent } from './shared/layouts/main-layout/main-layout.component';
 
 export const routes: Routes = [
-  { path:'login', component: LoginComponent },
-  { path:'dashboard', component: DashboardComponent },
-  { path:'patients',component:PatientsComponent},
-  { path:'patients/new', component:PatientFormComponent},
-  { path:'patients/edit/:id', component:PatientFormComponent},
-  { path:'appointments',component:AppointmentsComponent},
-  { path:'appointments/new', component:AppointmentFormComponent},
-  { path:'appointments/edit/:id', component:AppointmentFormComponent},
-  { path:'consultations',component:ConsultationsComponent},
-  { path:'consultations/new', component:ConsultationFormComponent},
-  { path:'consultations/edit/:id', component:ConsultationFormComponent},
-  { path:'meal-plans',component:MealPlanningComponent},
-  { path:'meal-plans/new', component:MealPlanFormComponent},
-  { path:'meal-plans/edit/:id', component:MealPlanFormComponent},
-  { path:'users',component:UsersComponent},
-  { path:'users/new', component:UsersComponent},
-  { path:'users/edit/:id', component:UsersComponent},
-  { path: '', redirectTo: 'patients', pathMatch: 'full' }
+  {
+    path: 'login',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: '',
+    component: MainLayoutComponent,
+    canActivate: [authGuard],
+    canActivateChild: [authGuard],
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      {
+        path: 'patients',
+        loadComponent: () => import('./features/patients/patients.component').then(m => m.PatientsComponent)
+      },
+      {
+        path: 'patients/new',
+        loadComponent: () => import('./features/patients/patient-form/patient-form.component').then(m => m.PatientFormComponent)
+      },
+      {
+        path: 'patients/edit/:id',
+        loadComponent: () => import('./features/patients/patient-form/patient-form.component').then(m => m.PatientFormComponent)
+      },
+      {
+        path: 'appointments',
+        loadComponent: () => import('./features/appointments/appointments.component').then(m => m.AppointmentsComponent)
+      },
+      {
+        path: 'appointments/new',
+        loadComponent: () => import('./features/appointments/appointment-form/appointment-form.component').then(m => m.AppointmentFormComponent)
+      },
+      {
+        path: 'appointments/edit/:id',
+        loadComponent: () => import('./features/appointments/appointment-form/appointment-form.component').then(m => m.AppointmentFormComponent)
+      },
+      {
+        path: 'consultations',
+        loadComponent: () => import('./features/consultations/consultations.component').then(m => m.ConsultationsComponent)
+      },
+      {
+        path: 'consultations/new',
+        loadComponent: () => import('./features/consultations/consultation-form/consultation-form.component').then(m => m.ConsultationFormComponent)
+      },
+      {
+        path: 'consultations/edit/:id',
+        loadComponent: () => import('./features/consultations/consultation-form/consultation-form.component').then(m => m.ConsultationFormComponent)
+      },
+      {
+        path: 'meal-plans',
+        loadComponent: () => import('./features/meal-planning/meal-planning.component').then(m => m.MealPlanningComponent)
+      },
+      {
+        path: 'meal-plans/new',
+        loadComponent: () => import('./features/meal-planning/meal-plan-form/meal-plan-form.component').then(m => m.MealPlanFormComponent)
+      },
+      {
+        path: 'meal-plans/edit/:id',
+        loadComponent: () => import('./features/meal-planning/meal-plan-form/meal-plan-form.component').then(m => m.MealPlanFormComponent)
+      },
+      {
+        path: 'users',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/users/users.component').then(m => m.UsersComponent)
+      },
+      {
+        path: 'users/new',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/users/users-form/users-form.component').then(m => m.UsersFormComponent)
+      },
+      {
+        path: 'users/edit/:id',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/users/users-form/users-form.component').then(m => m.UsersFormComponent)
+      },
+      { path: '', redirectTo: 'patients', pathMatch: 'full' },
+    ]
+  },
+  { path: '**', redirectTo: 'patients' },
 ];

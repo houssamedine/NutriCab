@@ -1,22 +1,24 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Appointment, CreateAppointmentRequest } from '../models/appointment.model';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Page } from '../models/user.model';
+import { API_BASE_URL } from '../config/api.config';
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class AppointmentsService {
-  private apiUrl = "http://localhost:8182/api/appointments";
+  private apiBaseUrl = inject(API_BASE_URL);
+  private apiUrl = `${this.apiBaseUrl}/appointments`;
 
   constructor(private http: HttpClient) { }
 
-  getAllAppointments(): Observable<Appointment[]> {
-    return this.http.get<Page<Appointment>>(this.apiUrl).pipe(
-      map(response => response.content)
-    );
+  getAllAppointments(page: number = 0, size: number = 10, sort: string = 'appointmentDate,desc'): Observable<Page<Appointment>> {
+    return this.http.get<Page<Appointment>>(this.apiUrl, {
+      params: { page, size, sort }
+    });
   }
 
   deleteAppointment(id: number): Observable<void> {
@@ -27,11 +29,13 @@ export class AppointmentsService {
     return this.http.get<Appointment>(`${this.apiUrl}/${id}`);
   }
 
-  searchAppointments(keyword: string): Observable<Appointment[]> {
-    const params = new HttpParams().set('keyword', keyword.trim());
-    return this.http.get<Page<Appointment>>(`${this.apiUrl}/search`, { params }).pipe(
-      map(response => response.content)
-    );
+  searchAppointments(keyword: string, page: number = 0, size: number = 10, sort: string = 'appointmentDate,desc'): Observable<Page<Appointment>> {
+    const params = new HttpParams()
+      .set('keyword', keyword.trim())
+      .set('page', page)
+      .set('size', size)
+      .set('sort', sort);
+    return this.http.get<Page<Appointment>>(`${this.apiUrl}/search`, { params });
   }
 
   updateAppointment(id: number, appointment: CreateAppointmentRequest): Observable<Appointment> {
@@ -42,10 +46,10 @@ export class AppointmentsService {
     return this.http.post<Appointment>(this.apiUrl, appointment);
   }
 
-  getAppointmentsByPatientId(patientId: number): Observable<Appointment[]> {
-    return this.http.get<Page<Appointment>>(`${this.apiUrl}/patient/${patientId}`).pipe(
-      map(response => response.content)
-    );
+  getAppointmentsByPatientId(patientId: number, page: number = 0, size: number = 10, sort: string = 'appointmentDate,desc'): Observable<Page<Appointment>> {
+    return this.http.get<Page<Appointment>>(`${this.apiUrl}/patient/${patientId}`, {
+      params: { page, size, sort }
+    });
   }
 
 }

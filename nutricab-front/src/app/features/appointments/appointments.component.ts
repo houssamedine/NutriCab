@@ -1,43 +1,51 @@
-import { Component, inject } from '@angular/core';
-import { Appointment } from '../../core/models/appointment.model';
+import { Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { Appointment, AppointmentStatus } from '../../core/models/appointment.model';
 import { AppointmentsService } from '../../core/services/appointments.service';
 import { AlertService } from '../../shared/Alertify/alert-service.service';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Patient } from '../../core/models/patient.model';
 import { PatientsService } from '../../core/services/patients.service';
+import { Page } from '../../core/models/user.model';
+import { PaginationComponent } from '../../shared/pagination/pagination.component';
+import { TableLoadingComponent } from '../../shared/table-loading/table-loading.component';
 
 @Component({
   selector: 'app-appointments',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, FormsModule],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule, PaginationComponent, TableLoadingComponent],
   templateUrl: './appointments.component.html',
   styleUrl: './appointments.component.css'
 })
-export class AppointmentsComponent {
+export class AppointmentsComponent implements OnInit {
   appointments: Appointment[] = [];
-  loading = false;
+  loading = true;
   searchTerm = '';
   errorMessage = '';
   patients: Patient[] = [];
   selectedPatientId = '';
+  page: Page<Appointment> | null = null;
+  pageSize = 10;
 
   private appointmentsService = inject(AppointmentsService);
   private patientsService = inject(PatientsService);
   private alertService = inject(AlertService);
   private router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
 
   ngOnInit(): void {
-    this.loadAppointments();
-    this.loadPatients();
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadAppointments();
+      this.loadPatients();
+    }
   }
 
   /** Charge la liste des rendez-vous */
   loadPatients(): void {
-    this.patientsService.getAllPatients().subscribe({
-      next: (data) => {
-        this.patients = data;
+    this.patientsService.getAllPatients(0, 100).subscribe({
+      next: (page) => {
+        this.patients = page.content;
       },
       error: () => {
         this.errorMessage = 'Erreur lors du chargement des patients';
@@ -46,12 +54,13 @@ export class AppointmentsComponent {
   }
 
   /**Liste Globale des rendez-vous */
-  loadAppointments(): void {
+  loadAppointments(pageNumber: number = 0): void {
     this.loading = true;
     this.errorMessage = '';
-    this.appointmentsService.getAllAppointments().subscribe({
-      next: (data) => {
-        this.appointments = data;
+    this.appointmentsService.getAllAppointments(pageNumber, this.pageSize).subscribe({
+      next: (page) => {
+        this.page = page;
+        this.appointments = page.content;
         this.loading = false;
 
       },
@@ -82,6 +91,7 @@ export class AppointmentsComponent {
           next: () => {
             this.appointments = this.appointments.filter(item => item.id !== id);
             this.alertService.success('Rendez-vous supprime avec succes');
+            this.loadCurrentPage();
           },
           error: () => {
             this.errorMessage = 'Erreur lors de la suppression';
@@ -111,9 +121,10 @@ export class AppointmentsComponent {
       this.loadAppointments();
       return;
     }
-    this.appointmentsService.searchAppointments(keyword).subscribe({
-      next: (data) => {
-        this.appointments = data;
+    this.appointmentsService.searchAppointments(keyword, 0, this.pageSize).subscribe({
+      next: (page) => {
+        this.page = page;
+        this.appointments = page.content;
         this.loading = false;
       },
       error: () => {
@@ -133,9 +144,10 @@ export class AppointmentsComponent {
 
     this.loading = true;
 
-    this.appointmentsService.getAppointmentsByPatientId(Number(patientId)).subscribe({
-      next: (data) => {
-        this.appointments = data;
+    this.appointmentsService.getAppointmentsByPatientId(Number(patientId), 0, this.pageSize).subscribe({
+      next: (page) => {
+        this.page = page;
+        this.appointments = page.content;
         this.loading = false;
       },
       error: () => {
@@ -143,6 +155,75 @@ export class AppointmentsComponent {
         this.loading = false;
       }
     });
+  }
+
+  onPageChange(pageNumber: number): void {
+    const keyword = this.searchTerm.trim();
+
+    if (this.selectedPatientId) {
+      this.loading = true;
+      this.errorMessage = '';
+      this.appointmentsService.getAppointmentsByPatientId(Number(this.selectedPatientId), pageNumber, this.pageSize).subscribe({
+        next: (page) => {
+          this.page = page;
+          this.appointments = page.content;
+          this.loading = false;
+        },
+        error: () => {
+          this.errorMessage = 'Erreur lors du filtrage par patient';
+          this.loading = false;
+        }
+      });
+      return;
+    }
+
+    if (keyword) {
+      this.loading = true;
+      this.errorMessage = '';
+      this.appointmentsService.searchAppointments(keyword, pageNumber, this.pageSize).subscribe({
+        next: (page) => {
+          this.page = page;
+          this.appointments = page.content;
+          this.loading = false;
+        },
+        error: () => {
+          this.errorMessage = 'Erreur lors de la recherche';
+          this.loading = false;
+        }
+      });
+      return;
+    }
+
+    this.loadAppointments(pageNumber);
+  }
+
+  private loadCurrentPage(): void {
+    const currentPage = this.page?.number ?? 0;
+    const pageAfterDelete = currentPage > 0 && this.appointments.length === 0
+      ? currentPage - 1
+      : currentPage;
+
+    this.onPageChange(pageAfterDelete);
+  }
+
+  getStatusLabel(status: AppointmentStatus): string {
+    const labels: Record<AppointmentStatus, string> = {
+      PLANNED: 'Planifie',
+      DONE: 'Termine',
+      CANCELLED: 'Annule'
+    };
+
+    return labels[status];
+  }
+
+  getStatusClass(status: AppointmentStatus): string {
+    const classes: Record<AppointmentStatus, string> = {
+      PLANNED: 'status-planned',
+      DONE: 'status-done',
+      CANCELLED: 'status-cancelled'
+    };
+
+    return classes[status];
   }
 
 }

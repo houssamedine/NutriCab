@@ -1,0 +1,151 @@
+<div class="div-form-page">
+    <div class="page-header">
+        <h2>
+            <i class="fas fa-user-plus"></i>
+            {{ isEditMode ? "Modifier l'utilisateur" : 'Ajouter un utilisateur' }}
+        </h2>
+        <button class="btn-close" type="button" aria-label="Fermer" (click)="cancel()"></button>
+    </div>
+
+    <form class="div-form" [formGroup]="userForm" (ngSubmit)="saveUser()" novalidate>
+        <div class="separator-container">
+            <div class="separator">
+                <span>Section Patients</span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label d-block">Statut du compte</label>
+            <div class="form-control d-flex align-items-center justify-content-between gap-4"
+                style="border:none !important" [class.is-invalid]="fieldInvalid('active')">
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="radio" id="activeTrue" formControlName="active"
+                        [value]="true">
+                    <label class="form-check-label" for="activeTrue">Actif</label>
+                </div>
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="radio" id="activeFalse" formControlName="active"
+                        [value]="false">
+                    <label class="form-check-label" for="activeFalse">Inactif</label>
+                </div>
+            </div>
+            <div class="invalid-feedback" [class.d-block]="fieldInvalid('active')">Le statut est obligatoire.</div>
+        </div>
+        <div class="separator-container">
+            <div class="separator">
+                <span>Section User</span>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div [ngClass]="isEditMode ? 'col-md-4' : 'col-md-6'">
+                <label for="fullName" class="form-label">Nom Complet</label>
+                <input type="text" class="form-control" [class.is-invalid]="fieldInvalid('fullName')"
+                    formControlName="fullName" id="fullName" placeholder="Ex: Sara Benali">
+                <div class="invalid-feedback">Le nom complet est obligatoire.</div>
+            </div>
+
+            <div [ngClass]="isEditMode ? 'col-md-4' : 'col-md-6'">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" [class.is-invalid]="fieldInvalid('email')"
+                    formControlName="email" id="email" placeholder="Ex: sara.benali@email.com">
+                <div class="invalid-feedback">Un email valide est obligatoire.</div>
+            </div>
+            @if (!isEditMode) {
+            <div class="col-md-6">
+                <label for="password" class="form-label">Mot de passe</label>
+                <div class="input-group">
+                    <input [type]="showPassword ? 'text' : 'password'" class="form-control"
+                        [class.is-invalid]="fieldInvalid('password')" formControlName="password" id="password"
+                        placeholder="Minimum 6 caracteres">
+                    <button class="btn btn-outline-secondary" type="button"
+                        [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                        [title]="showPassword ? 'Masquer' : 'Afficher'" (click)="togglePasswordVisibility()">
+                        <i class="fa-regular" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                    <div class="invalid-feedback">Le mot de passe doit contenir au moins 6 caracteres.</div>
+                </div>
+            </div>
+            }
+
+            <div [ngClass]="isEditMode ? 'col-md-4' : 'col-md-6'">
+                <label for="role" class="form-label">Role</label>
+                <select class="form-select" [class.is-invalid]="fieldInvalid('role')" formControlName="role" id="role">
+                    <option value="">Selectionner un role</option>
+                    @for (role of userRoles; track role) {
+                    <option [value]="role">{{ role }}</option>
+                    }
+                </select>
+                <div class="invalid-feedback">Le role est obligatoire.</div>
+            </div>
+
+            @if (errorMessage) {
+            <div class="col-12">
+                <div class="alert alert-danger mb-0">{{ errorMessage }}</div>
+            </div>
+            }
+
+            <div class="col-12 form-actions">
+                <button class="btn btn-outline-secondary" type="button" (click)="cancel()">
+                    Annuler
+                </button>
+                <button class="btn btn-primary" type="submit" [disabled]="loading">
+                    <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    {{ isEditMode ? 'Modifier' : 'Enregistrer' }}
+                </button>
+            </div>
+        </div>
+    </form>
+
+    @if (isEditMode) {
+    <form class="div-form mt-3" [formGroup]="passwordForm" (ngSubmit)="changePassword()" novalidate>
+        <div class="separator-container">
+            <div class="separator">
+                <span>Changer le mot de passe</span>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="oldPassword" class="form-label">Ancien mot de passe</label>
+                <div class="input-group">
+                    <input [type]="showOldPassword ? 'text' : 'password'" class="form-control"
+                        [class.is-invalid]="passwordFieldInvalid('oldPassword')" formControlName="oldPassword"
+                        id="oldPassword" placeholder="Ancien mot de passe">
+                    <button class="btn btn-outline-secondary" type="button"
+                        [attr.aria-label]="showOldPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                        [title]="showOldPassword ? 'Masquer' : 'Afficher'" (click)="toggleOldPasswordVisibility()">
+                        <i class="fa-regular" [ngClass]="showOldPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                    <div class="invalid-feedback" [class.d-block]="passwordFieldInvalid('oldPassword')">
+                        L'ancien mot de passe est obligatoire.
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label for="newPassword" class="form-label">Nouveau mot de passe</label>
+                <div class="input-group">
+                    <input [type]="showNewPassword ? 'text' : 'password'" class="form-control"
+                        [class.is-invalid]="passwordFieldInvalid('newPassword')" formControlName="newPassword"
+                        id="newPassword" placeholder="Minimum 6 caracteres">
+                    <button class="btn btn-outline-secondary" type="button"
+                        [attr.aria-label]="showNewPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                        [title]="showNewPassword ? 'Masquer' : 'Afficher'" (click)="toggleNewPasswordVisibility()">
+                        <i class="fa-regular" [ngClass]="showNewPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                    </button>
+                    <div class="invalid-feedback" [class.d-block]="passwordFieldInvalid('newPassword')">
+                        Le nouveau mot de passe doit contenir au moins 6 caracteres.
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 form-actions">
+                <button class="btn btn-outline-primary" type="submit" [disabled]="passwordLoading">
+                    <span *ngIf="passwordLoading" class="spinner-border spinner-border-sm me-2"
+                        aria-hidden="true"></span>
+                    Changer le mot de passe
+                </button>
+            </div>
+        </div>
+    </form>
+    }
+
+</div>

@@ -30,7 +30,7 @@
             </button>
         </div>
     </div>
-    <div class="table-responsive" *ngIf="!loading">
+    <div class="table-responsive">
         <table class="table table-striped table-hover align-middle">
             <thead class="table-light">
                 <tr>
@@ -42,11 +42,17 @@
                 </tr>
             </thead>
             <tbody>
+                <tr appTableLoading [loading]="loading" [colspan]="5"></tr>
+                @if (!loading) {
                 @for (item of appointments; track item.id) {
                 <tr>
                     <td class="fw-bold">{{ item.patient.fullName }}</td>
                     <td>{{ item.appointmentDate }}</td>
-                    <td>{{ item.status }}</td>
+                    <td>
+                        <span class="status-badge" [ngClass]="getStatusClass(item.status)">
+                            {{ getStatusLabel(item.status) }}
+                        </span>
+                    </td>
                     <td>{{ item.notes }}</td>
                     <td class="text-end">
                         <button class="btn btn-outline-warning btn-sm me-2" title="Modifier"
@@ -61,10 +67,12 @@
                 </tr>
                 } @empty {
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">Aucun rendez-vous trouvé</td>
+                    <td colspan="5" class="text-center text-muted py-4">Aucun rendez-vous trouvé</td>
                 </tr>
+                }
                 }
             </tbody>
         </table>
     </div>
+    <app-pagination [page]="page" (pageChange)="onPageChange($event)"></app-pagination>
 </div>
