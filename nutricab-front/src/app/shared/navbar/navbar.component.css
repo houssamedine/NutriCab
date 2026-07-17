@@ -47,6 +47,18 @@
   text-align: center;
 }
 
+.sidebar-link-admin {
+  display: none;
+}
+
+:host-context(.auth-role-admin) .sidebar-link-admin {
+  display: flex;
+}
+
+.sidebar-link-admin.sidebar-link-admin-hidden {
+  display: none;
+}
+
 .sidebar-link:hover,
 .sidebar-link.active {
   background: rgba(79, 109, 245, 0.18);

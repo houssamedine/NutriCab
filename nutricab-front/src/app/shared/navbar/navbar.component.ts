@@ -20,6 +20,10 @@ export class NavbarComponent {
     return this.authService.getRole() === 'ADMIN';
   }
 
+  get isRoleResolved(): boolean {
+    return this.authService.getRole() !== null;
+  }
+
   logout(): void {
     this.authService.logout().subscribe({
       next: () => this.router.navigate(['/login']),

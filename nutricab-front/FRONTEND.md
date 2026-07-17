@@ -298,6 +298,22 @@ Puis redirige vers :
 /login
 ```
 
+### Role Admin Avant Le Premier Affichage
+
+Pendant le SSR, le serveur ne peut pas lire `sessionStorage`. Pour eviter que le lien `Users` soit absent au premier affichage puis apparaisse apres hydratation, `index.html` lit uniquement la valeur non sensible `sessionStorage.role` avant le rendu visuel.
+
+Si cette valeur vaut `ADMIN`, la classe `auth-role-admin` est ajoutee a l'element `<html>`. Le CSS de la navbar peut alors afficher le lien `Users` des la premiere frame, avant le demarrage d'Angular.
+
+`AuthService` synchronise ensuite cette classe apres login, refresh et logout. Le lien existe dans la structure SSR, mais reste masque pour les roles non admin. `adminGuard` et la protection backend `/api/users/**` restent les vraies protections d'acces.
+
+### Role Admin Avant Le Premier Affichage
+
+Pendant le SSR, le serveur ne peut pas lire `sessionStorage`. Pour eviter que le lien `Users` soit absent au premier affichage puis apparaisse apres hydratation, `index.html` lit uniquement la valeur non sensible `sessionStorage.role` avant le rendu visuel.
+
+Si cette valeur vaut `ADMIN`, la classe `auth-role-admin` est ajoutee a l'element `<html>`. Le CSS de la navbar peut alors afficher le lien `Users` des la premiere frame, avant le demarrage d'Angular.
+
+`AuthService` synchronise ensuite cette classe apres login, refresh et logout. Le lien existe dans la structure SSR, mais reste masque pour les roles non admin. `adminGuard` et la protection backend `/api/users/**` restent les vraies protections d'acces.
+
 ## 11. Services Front Et Endpoints Back
 
 Chaque service Angular correspond a un groupe d'endpoints backend.

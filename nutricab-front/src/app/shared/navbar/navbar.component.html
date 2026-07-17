@@ -22,12 +22,11 @@
       Meal-planning
     </a>
 
-    @if (isAdmin) {
-    <a routerLink="/users" routerLinkActive="active" class="sidebar-link">
+    <a routerLink="/users" routerLinkActive="active" class="sidebar-link sidebar-link-admin"
+      [class.sidebar-link-admin-hidden]="isRoleResolved && !isAdmin">
       <i class="fas fa-user-shield"></i>
       Users
     </a>
-    }
   </nav>
 
   <button class="sidebar-logout" type="button" (click)="logout()">
