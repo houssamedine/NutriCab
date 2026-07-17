@@ -41,7 +41,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = false)
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private static final String ACCESS_TOKEN_COOKIE = "access_token";
@@ -53,9 +53,17 @@ public class SecurityConfig {
                 .cors(cors -> {
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                )
+                        .authorizeHttpRequests(auth -> auth
+                                .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
+                                .requestMatchers("/api/users/**").hasRole("ADMIN")
+                                .requestMatchers("/api/patients/**").hasAnyRole("ADMIN", "NUTRITIONIST", "PATIENT")
+                                .requestMatchers("/api/appointments/**")
+                                .hasAnyRole("ADMIN", "NUTRITIONIST", "SECRETARY", "PATIENT")
+                                .requestMatchers("/api/consultations/**").hasAnyRole("ADMIN", "NUTRITIONIST", "PATIENT")
+                                .requestMatchers("/api/meal-plan/**").hasAnyRole("ADMIN", "NUTRITIONIST", "PATIENT")
+                                .anyRequest().authenticated())
+                        .oauth2ResourceServer(oauth2 -> oauth2
+                                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .build();
     }
 
@@ -66,8 +74,7 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource(
-            @Value("${app.security.cors.allowed-origins:http://localhost:4200}") String allowedOrigins
-    ) {
+            @Value("${app.security.cors.allowed-origins:http://localhost:4200}") String allowedOrigins) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)

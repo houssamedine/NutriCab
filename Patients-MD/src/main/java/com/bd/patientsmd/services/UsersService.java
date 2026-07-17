@@ -5,6 +5,7 @@ import com.bd.patientsmd.models.dtos.UsersDto;
 import com.bd.patientsmd.models.enums.UserRole;
 import com.bd.patientsmd.models.requests.CreateUserRequest;
 import com.bd.patientsmd.models.requests.LoginRequest;
+import com.bd.patientsmd.models.requests.UpdateUserRequest;
 import com.bd.patientsmd.models.responses.AuthSession;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,7 +17,7 @@ public interface UsersService {
     UsersDto createUser(CreateUserRequest request);
     Page<UsersDto> getAllUsers(Pageable pageable);
     UsersDto getUserById(Long id);
-    UsersDto updateUser(Long id, CreateUserRequest request);
+    UsersDto updateUser(Long id, UpdateUserRequest request);
     void deleteUser(Long id);
     // Authentification
     AuthSession login(LoginRequest request);

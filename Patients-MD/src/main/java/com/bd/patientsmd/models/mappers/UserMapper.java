@@ -3,6 +3,7 @@ package com.bd.patientsmd.models.mappers;
 import com.bd.patientsmd.models.dtos.UsersDto;
 import com.bd.patientsmd.models.entites.Users;
 import com.bd.patientsmd.models.requests.CreateUserRequest;
+import com.bd.patientsmd.models.requests.UpdateUserRequest;
 import com.bd.patientsmd.models.responses.UserResponse;
 import com.bd.patientsmd.models.responses.UserSummaryResponse;
 
@@ -75,6 +76,14 @@ public class UserMapper {
         user.setFullName(request.fullName());
         user.setEmail(request.email());
         user.setPassword(request.password());
+        user.setRole(request.role());
+    }
+
+    public static void updateEntity(Users user, UpdateUserRequest request) {
+        if (user == null || request == null) return;
+
+        user.setFullName(request.fullName());
+        user.setEmail(request.email());
         user.setRole(request.role());
     }
 }

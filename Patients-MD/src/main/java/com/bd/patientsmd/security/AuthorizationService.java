@@ -54,7 +54,7 @@ public class AuthorizationService {
 
     public boolean canCreatePatient(Long assignedUserId) {
         if (assignedUserId == null) {
-            return currentUserService.isAdmin();
+            return currentUserService.isAdmin() || currentUserService.isNutritionist();
         }
 
         if (currentUserService.isAdmin()) {

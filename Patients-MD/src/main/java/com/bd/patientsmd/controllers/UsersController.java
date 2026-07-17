@@ -5,10 +5,12 @@ import com.bd.patientsmd.models.dtos.UsersDto;
 import com.bd.patientsmd.models.enums.UserRole;
 import com.bd.patientsmd.models.requests.ChangePasswordRequest;
 import com.bd.patientsmd.models.requests.CreateUserRequest;
+import com.bd.patientsmd.models.requests.UpdateUserRequest;
 import com.bd.patientsmd.services.UsersService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +26,7 @@ public class UsersController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public UsersDto createUser(@Valid @RequestBody CreateUserRequest request) {
         return usersService.createUser(request);
     }
@@ -39,11 +42,12 @@ public class UsersController {
     }
 
     @PutMapping("/{id}")
-    public UsersDto updateUser(@PathVariable Long id, @Valid @RequestBody CreateUserRequest request) {
+    public UsersDto updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest request) {
         return usersService.updateUser(id, request);
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
         usersService.deleteUser(id);
     }
@@ -73,6 +77,7 @@ public class UsersController {
     }
 
     @PatchMapping("/{id}/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changePassword(@PathVariable Long id, @Valid @RequestBody ChangePasswordRequest request) {
         usersService.changePassword(id, request.oldPassword(), request.newPassword());
     }

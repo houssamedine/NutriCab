@@ -6,6 +6,7 @@ import com.bd.patientsmd.services.MealPlanService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ public class MealPlanController {
     }
 
     @PostMapping()
+    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("@authorizationService.canCreateMealPlan(#request.patientId())")
     public MealPlanDto createMealPlan(@P("request") @Valid @RequestBody CreateMealPlanRequest request){
         return planService.createMealPlan(request);
@@ -48,6 +50,7 @@ public class MealPlanController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("@authorizationService.canManageMealPlan(#id)")
     public void deleteMealPlan(@P("id") @PathVariable Long id){
         planService.deleteMealPlan(id);

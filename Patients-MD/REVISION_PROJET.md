@@ -12,7 +12,7 @@ Il explique :
 - les repositories.
 - les services.
 - les controllers et endpoints.
-- la security JWT Bearer.
+- la security JWT par cookies HttpOnly, avec compatibilite Bearer.
 - la configuration.
 - le fonctionnement des erreurs.
 - les points forts.
@@ -532,7 +532,7 @@ Champs :
 
 ### `RefreshTokenRequest`
 
-Utilisee pour refresh et logout.
+Ancien format de body encore accepte en compatibilite pour refresh et logout. Le frontend Angular utilise maintenant le cookie HttpOnly et envoie un body vide.
 
 Champs :
 
@@ -567,7 +567,7 @@ Les DTO principaux contiennent aussi les champs d'audit :
 
 | Response | Role |
 |---|---|
-| `AuthResponse` | Retour login avec access token et refresh token |
+| `AuthResponse` | Retour login avec `fullName` et `role`, sans token dans le JSON |
 | `UserSummaryResponse` | Resume utilisateur |
 | `PatientSummaryResponse` | Resume patient |
 | `PatientResponse` | Detail patient |
@@ -581,12 +581,19 @@ Retourne apres login :
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiJ9...",
-  "refreshToken": "4b4e4d9a-7c87-4f76-86fd-3cfd5e9a15cf",
   "fullName": "Admin",
   "role": "ADMIN"
 }
 ```
+
+Les tokens sont transmis separement avec deux cookies `HttpOnly` :
+
+| Cookie | Contenu | Path | Role |
+|---|---|---|---|
+| `access_token` | JWT court | `/` | Authentifier les routes protegees |
+| `refresh_token` | Valeur aleatoire persistee en base | `/api/auth` | Renouveler la session |
+
+Le frontend ne peut pas lire ces cookies en JavaScript et ne doit jamais attendre `res.accessToken`.
 
 ## 10. Mappers
 
@@ -956,7 +963,7 @@ Security :
 /api/meal-plan/** -> ADMIN, NUTRITIONIST, PATIENT avec controle metier
 ```
 
-## 14. Security JWT Bearer
+## 14. Security JWT Par Cookies HttpOnly
 
 La documentation detaillee de la security est dans :
 
@@ -969,11 +976,11 @@ Resume :
 1. l'utilisateur se connecte avec `/api/auth/login`.
 2. le backend verifie email et password.
 3. le backend genere un JWT et un refresh token.
-4. le client garde ces tokens.
-5. le client appelle les routes protegees avec :
+4. `AuthController` place les tokens dans des cookies HttpOnly.
+5. Angular appelle les routes protegees avec `withCredentials: true`.
 
 ```http
-Authorization: Bearer <token>
+Cookie: access_token=<jwt>
 ```
 
 Quand le JWT expire, le client appelle :
@@ -982,13 +989,7 @@ Quand le JWT expire, le client appelle :
 POST /api/auth/refresh
 ```
 
-avec :
-
-```json
-{
-  "refreshToken": "4b4e4d9a-7c87-4f76-86fd-3cfd5e9a15cf"
-}
-```
+Le navigateur envoie automatiquement `refresh_token`; le body peut etre vide. Le header Bearer et le body historique restent acceptes pour les clients techniques.
 
 Le refresh token est stocke en base dans la table `refresh_tokens` et il est revoque apres utilisation.
 
@@ -1125,8 +1126,8 @@ Etapes :
 2. l'utilisateur est cherche par email.
 3. le compte actif est verifie.
 4. le mot de passe est compare.
-5. un JWT et un refresh token sont generes.
-6. les tokens sont retournes.
+5. un JWT et un refresh token sont generes dans un `AuthSession` interne.
+6. le controller pose les cookies et retourne seulement `fullName` et `role`.
 
 ### 17.2. Flux Creation Patient
 
@@ -1212,11 +1213,10 @@ OpenApiSecurityConfig.java
 
 Utilisation :
 
-1. faire un login.
-2. copier le token.
-3. cliquer sur `Authorize`.
-4. coller le token.
-5. tester les routes protegees.
+1. appeler `/api/auth/login` depuis Swagger.
+2. laisser le navigateur conserver les cookies recus.
+3. tester les routes protegees sur la meme origine.
+4. utiliser `Authorize` uniquement pour tester le fallback Bearer avec un JWT obtenu par un outil technique.
 
 ## 19. Commandes Utiles
 
@@ -1257,8 +1257,10 @@ Body :
 
 ```http
 GET http://localhost:8182/api/patients
-Authorization: Bearer <token>
+Cookie: access_token=<jwt>
 ```
+
+Dans Angular, ce cookie est ajoute automatiquement grace a `withCredentials: true`.
 
 ### Refresh token
 
@@ -1267,12 +1269,10 @@ POST http://localhost:8182/api/auth/refresh
 Content-Type: application/json
 ```
 
-Body :
+Body Angular :
 
 ```json
-{
-  "refreshToken": "<refresh-token>"
-}
+{}
 ```
 
 ### Logout
@@ -1282,12 +1282,10 @@ POST http://localhost:8182/api/auth/logout
 Content-Type: application/json
 ```
 
-Body :
+Body Angular :
 
 ```json
-{
-  "refreshToken": "<refresh-token>"
-}
+{}
 ```
 
 ## 20. Points Forts Du Projet
@@ -1298,7 +1296,7 @@ Le projet a deja plusieurs bons points :
 - DTO et mappers.
 - validation des donnees avec `@Valid`.
 - gestion globale des exceptions.
-- securite JWT Bearer.
+- securite JWT par cookies HttpOnly, avec fallback Bearer.
 - refresh token avec rotation et revocation.
 - roles `ADMIN`, `NUTRITIONIST`, `SECRETARY`, `PATIENT`.
 - mots de passe hashes avec BCrypt.
@@ -1507,11 +1505,13 @@ L'architecture est en couches :
 Controller -> Service -> Repository -> Database
 ```
 
-La securite est basee sur JWT Bearer :
+La securite est basee sur un JWT transporte par cookie HttpOnly :
 
 ```text
-Login -> JWT -> Authorization Bearer -> Verification des roles
+Login -> cookies access_token/refresh_token -> verification JWT -> verification des roles
 ```
+
+Le header Bearer reste disponible pour Swagger et les clients techniques.
 
 Les mots de passe sont securises avec BCrypt.
 
@@ -1524,9 +1524,200 @@ Les routes sont protegees selon les roles :
 
 Les erreurs sont retournees en JSON structure.
 
-Le projet est fonctionnel, mais pour un niveau production il faut encore ajouter :
+Le projet est fonctionnel, mais pour un niveau production il faut encore completer :
 
 - tests.
 - migrations Flyway/Liquibase.
 - Docker.
-- profils dev/prod.
+- tests de securite et parcours frontend SSR.
+
+## 24. Liaison Avec Le Frontend Angular
+
+Le backend `Patients-MD` est consomme par le frontend Angular `nutricab-front`.
+
+Documentation frontend :
+
+```text
+../nutricab-front/FRONTEND.md
+```
+
+### 24.1. Responsabilite De Chaque Partie
+
+| Partie | Responsabilite |
+|---|---|
+| Frontend Angular | afficher les pages, gerer les formulaires, appeler les APIs |
+| Services Angular | transformer les actions utilisateur en requetes HTTP |
+| Interceptor Angular | envoyer les cookies avec chaque requete |
+| Guards Angular | proteger la navigation cote interface |
+| Backend Spring Boot | appliquer la logique metier et sauvegarder en base |
+| Spring Security | valider JWT, roles et droits d'acces |
+| MySQL | stocker utilisateurs, patients, rendez-vous, consultations et plans |
+
+### 24.2. Flux Global D'une Action
+
+Exemple : creation d'un patient depuis Angular.
+
+```text
+Formulaire Angular
+-> PatientsService.createPatient()
+-> POST /api/patients
+-> credentialsInterceptor ajoute les cookies
+-> Spring Security valide le JWT
+-> @PreAuthorize verifie les droits metier
+-> PatientController
+-> PatientServiceImpl
+-> PatientRepository
+-> MySQL
+```
+
+Le frontend aide l'utilisateur a naviguer correctement, mais le backend reste responsable de la securite et de la coherence des donnees.
+
+### 24.3. Mapping Modules Front / Back
+
+| Module Angular | Service Angular | Controller backend | Endpoint |
+|---|---|---|---|
+| Login | `AuthService` | `AuthController` | `/api/auth` |
+| Patients | `PatientsService` | `PatientController` | `/api/patients` |
+| Appointments | `AppointmentsService` | `AppointmentsController` | `/api/appointments` |
+| Consultations | `ConsultationsService` | `ConsultationsController` | `/api/consultations` |
+| Meal planning | `MealplanningService` | `MealPlanController` | `/api/meal-plan` |
+| Users | `UserService` | `UsersController` | `/api/users` |
+
+### 24.4. Regle Importante Sur Les Roles
+
+Le frontend peut cacher certains menus, par exemple le menu `Users` si le role n'est pas `ADMIN`.
+
+Mais cela ne suffit jamais pour securiser une application.
+
+La securite definitive est appliquee ici :
+
+```text
+SecurityConfig.java
+Controllers avec @PreAuthorize
+Services avec AuthorizationService
+```
+
+Exemple :
+
+```text
+/users est bloque par adminGuard cote Angular.
+/api/users/** est bloque par hasRole("ADMIN") cote Spring Security.
+```
+
+Si un utilisateur force une requete HTTP manuellement, le backend retourne `403 Forbidden`.
+
+### 24.5. Layout Et Guards Angular
+
+La route `/login` est en dehors de `MainLayoutComponent`. Elle n'affiche donc pas la sidebar. Les pages `/patients`, `/appointments`, `/consultations`, `/meal-plans` et `/users` sont des enfants du layout principal, qui contient la navbar/sidebar et un `router-outlet`.
+
+| Guard | Type | Comportement |
+|---|---|---|
+| `authGuard` | `CanActivateFn` | Valide la session ou appelle `/auth/refresh` |
+| `guestGuard` | `CanActivateFn` | Evite d'afficher login a un utilisateur deja connecte |
+| `adminGuard` | `CanActivateFn` | Reserve `/users` au role `ADMIN` |
+
+Les guards retournent `true` ou un `UrlTree`. Le `returnUrl` est conserve pour revenir a la page initialement demandee apres la connexion.
+
+### 24.6. Correction Du Refresh Avec SSR
+
+Cause initiale du retour incorrect vers `/login` :
+
+```text
+1. le navigateur actualisait une route protegee.
+2. Angular executait aussi les composants et interceptors pendant le rendu serveur.
+3. le processus Node ne possedait pas automatiquement les cookies HttpOnly du navigateur.
+4. l'interceptor serveur appelait /auth/refresh sans refresh_token.
+5. le backend retournait 401.
+6. l'interceptor naviguait vers /login avant l'hydratation du navigateur.
+```
+
+Correction appliquee :
+
+- `auth-refresh.interceptor.ts` ne tente aucun refresh et aucune redirection pendant le SSR.
+- apres hydratation, le navigateur execute le guard avec ses vrais cookies.
+- si `sessionStorage.authenticated` manque, `authGuard` attend `/auth/refresh`.
+- un succes conserve l'URL courante.
+- un echec retourne `/login?returnUrl=<url>`.
+- `AuthService.refresh()` utilise `shareReplay` pour partager une requete en cours et eviter deux rotations simultanees du refresh token.
+
+### 24.7. Correction Du Chargement Des Tableaux
+
+Cause initiale du clignotement `Aucune donnee trouvee` : le HTML SSR etait produit avec des listes vides, puis le navigateur chargeait les vraies donnees apres hydratation.
+
+Le frontend utilise maintenant :
+
+```text
+src/app/shared/table-loading/table-loading.component.*
+```
+
+Regles appliquees aux cinq listes :
+
+1. `loading` est initialise a `true`.
+2. `ngOnInit()` lance les appels API uniquement si `isPlatformBrowser(PLATFORM_ID)` est vrai.
+3. le prérendu contient une ligne spinner et aucun message vide.
+4. les lignes de donnees et `@empty` sont rendus seulement avec `@if (!loading)`.
+5. le spinner disparait apres succes ou erreur.
+6. le message vide apparait uniquement si la reponse terminee contient vraiment zero element.
+
+Cette logique couvre le chargement initial, la recherche, les filtres et la pagination pour Patients, Rendez-vous, Consultations, Plans alimentaires et Utilisateurs.
+
+`afterNextRender()` a ete retire de ce flux : son callback peut s'executer avant que le composant soit completement hydrate. Avec une reponse HTTP rapide, les donnees existaient dans Network mais le DOM pouvait rester sur l'etat SSR du spinner.
+
+Pour le menu `Users`, `index.html` lit la valeur non sensible `sessionStorage.role` avant le premier affichage. Si elle vaut `ADMIN`, une classe CSS rend le lien visible immediatement. `AuthService` maintient cette classe apres login, refresh et logout. Cela supprime le clignotement du menu sans exposer ni lire le JWT.
+
+### 24.8. Lecture Recommandee Des Trois Documents
+
+Pour comprendre tout le projet, lire dans cet ordre :
+
+1. `REVISION_PROJET.md` : architecture backend, entites, services, controllers.
+2. `SECURITY.md` : login, JWT, cookies, roles, 401/403.
+3. `../nutricab-front/FRONTEND.md` : routes Angular, guards, services et liaison avec l'API.
+
+## 25. Ameliorations Backend Ajoutees
+
+### 25.1. Profils D'Environnement
+
+Les profils Spring separent maintenant les configurations selon l'usage :
+
+| Fichier | Role |
+|---|---|
+| `src/main/resources/application-dev.yml` | Developpement local avec MySQL, SQL visible et cookies non secure |
+| `src/main/resources/application-test.yml` | Tests avec base H2 en memoire, sans dependance a MySQL local |
+| `src/main/resources/application-prod.yml` | Production avec variables d'environnement, cookies secure et `ddl-auto: validate` |
+
+Le test principal utilise le profil `test` :
+
+```text
+src/test/java/com/bd/patientsmd/PatientsMdApplicationTests.java
+```
+
+Interet :
+
+- les tests peuvent tourner sur une machine propre.
+- la production ne depend plus des valeurs locales.
+- les logs SQL et `ddl-auto: update` restent limites au developpement.
+
+### 25.2. Codes HTTP Plus Propres
+
+Les controllers retournent maintenant des statuts plus proches des conventions REST :
+
+| Action | Code |
+|---|---|
+| Creation `POST` | `201 Created` |
+| Suppression `DELETE` | `204 No Content` |
+| Changement de mot de passe | `204 No Content` |
+| Email deja utilise | `409 Conflict` |
+
+Fichiers concernes :
+
+```text
+src/main/java/com/bd/patientsmd/controllers/UsersController.java
+src/main/java/com/bd/patientsmd/controllers/PatientController.java
+src/main/java/com/bd/patientsmd/controllers/AppointmentsController.java
+src/main/java/com/bd/patientsmd/controllers/ConsultationsController.java
+src/main/java/com/bd/patientsmd/controllers/MealPlanController.java
+src/main/java/com/bd/patientsmd/exceptions/DuplicateResourceException.java
+src/main/java/com/bd/patientsmd/exceptions/GlobalExceptionHandler.java
+```
+
+`DuplicateResourceException` est utilisee pour signaler clairement les conflits metier, par exemple un email deja utilise.

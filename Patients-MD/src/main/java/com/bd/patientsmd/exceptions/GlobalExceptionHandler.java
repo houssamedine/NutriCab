@@ -45,6 +45,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(DuplicateResourceException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleConflict(DuplicateResourceException ex, HttpServletRequest request) {
+        log.warn("API error 409: {}", ex.getMessage());
+        return new ErrorResponse(
+                LocalDateTime.now(),
+                409,
+                "CONFLICT",
+                request.getRequestURI(),
+                ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {

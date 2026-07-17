@@ -1,8 +1,8 @@
-# Documentation Security JWT Bearer
+# Documentation Security JWT Par Cookies HttpOnly
 
 Ce document explique la partie security ajoutee dans le projet `Patients-MD`.
 
-L'objectif est de securiser l'API avec un token JWT utilise dans le header HTTP :
+L'objectif est de securiser l'API avec un JWT place dans un cookie `HttpOnly`. Le `BearerTokenResolver` accepte aussi le header suivant pour les outils techniques comme Swagger ou Postman :
 
 ```http
 Authorization: Bearer <token>
@@ -131,7 +131,7 @@ Elle configure les regles de securite HTTP.
 .csrf(AbstractHttpConfigurer::disable)
 ```
 
-On desactive CSRF parce que l'application est une API REST stateless. Le client s'authentifie avec un token JWT, pas avec une session serveur classique.
+CSRF est actuellement desactive. L'API est stateless, mais les JWT sont transportes par cookies : en production, `SameSite` et la liste CORS reduisent le risque sans remplacer une protection CSRF complete. Une strategie CSRF explicite est donc recommandee si le frontend et l'API deviennent cross-site.
 
 ### Session stateless
 
@@ -141,11 +141,13 @@ On desactive CSRF parce que l'application est une API REST stateless. Le client 
 
 Cela veut dire que Spring ne garde pas de session utilisateur cote serveur.
 
-A chaque requete protegee, le client doit envoyer le token :
+A chaque requete protegee, le navigateur envoie normalement :
 
 ```http
-Authorization: Bearer <token>
+Cookie: access_token=<jwt>
 ```
+
+Le header `Authorization: Bearer <token>` reste disponible comme fallback pour Swagger et les clients non navigateur.
 
 ### Routes publiques
 
@@ -219,10 +221,10 @@ Donc :
 
 Cela indique a Spring Security :
 
-1. de lire le header `Authorization`.
-2. de verifier que le token est un Bearer token.
-3. de decoder le JWT.
-4. de verifier sa signature.
+1. de demander le token au `BearerTokenResolver` personnalise.
+2. de lire en priorite le cookie `access_token`.
+3. de conserver le header `Authorization: Bearer` comme fallback.
+4. de decoder le JWT et verifier sa signature.
 5. de creer l'utilisateur authentifie dans le contexte Spring Security.
 
 ## 4. Beans JWT
@@ -482,9 +484,9 @@ Le refresh token utilise ces classes :
 | `RefreshToken` | Entite JPA stockee dans `refresh_tokens` |
 | `RefreshTokenRepository` | Recherche, sauvegarde et suppression des refresh tokens |
 | `RefreshTokenService` | Creation, validation, rotation et revocation |
-| `RefreshTokenRequest` | Body de `/api/auth/refresh` et `/api/auth/logout` |
+| `RefreshTokenRequest` | Ancien body encore accepte en compatibilite par refresh et logout |
 
-Le refresh token n'est pas un JWT. C'est une valeur aleatoire UUID stockee en base.
+Le refresh token n'est pas un JWT. C'est une valeur aleatoire UUID stockee en base et envoyee au navigateur dans le cookie `refresh_token`.
 
 Quand `/api/auth/refresh` est appele, l'ancien refresh token est revoque et un nouveau refresh token est genere.
 
@@ -532,7 +534,7 @@ Pendant le login :
 5. on compare le mot de passe avec BCrypt.
 6. on genere le JWT.
 7. on genere un refresh token.
-8. on retourne les deux tokens.
+8. on retourne un `AuthSession` interne au controller.
 
 Code important :
 
@@ -541,7 +543,7 @@ if (!passwordMatches(request.password(), user)) {
     throw new InvalidCredentialsException("Email ou mot de passe incorrect");
 }
 
-return new AuthResponse(
+return new AuthSession(
         jwtService.generateToken(user),
         refreshTokenService.createRefreshToken(user),
         user.getFullName(),
@@ -593,12 +595,17 @@ Body :
 
 ### Etape 2 : reponse
 
-Si les identifiants sont corrects, l'API retourne :
+Si les identifiants sont corrects, l'API pose deux headers `Set-Cookie` :
+
+```text
+access_token=<jwt>; HttpOnly; Path=/; Max-Age=...
+refresh_token=<uuid>; HttpOnly; Path=/api/auth; Max-Age=...
+```
+
+Le body JSON contient uniquement les informations utiles a l'interface :
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiJ9...",
-  "refreshToken": "4b4e4d9a-7c87-4f76-86fd-3cfd5e9a15cf",
   "fullName": "Amine Bennani",
   "role": "ADMIN"
 }
@@ -606,40 +613,35 @@ Si les identifiants sont corrects, l'API retourne :
 
 ### Etape 3 : appel d'une route protegee
 
-Le client doit envoyer le token dans le header :
+Le navigateur envoie automatiquement le cookie `access_token` lorsque le frontend utilise `withCredentials: true` :
 
 ```http
 GET /api/patients
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+Cookie: access_token=eyJhbGciOiJIUzI1NiJ9...
 ```
 
 ### Etape 4 : verification par Spring Security
 
 Spring Security :
 
-1. recupere le token.
-2. verifie la signature avec `JWT_SECRET`.
-3. verifie l'expiration.
-4. lit le claim `role`.
-5. transforme `ADMIN` en `ROLE_ADMIN`.
-6. autorise ou refuse la route.
+1. cherche d'abord `access_token` dans les cookies.
+2. utilise le header Bearer en fallback si aucun cookie n'est disponible.
+3. verifie la signature avec `JWT_SECRET`.
+4. verifie l'expiration.
+5. lit le claim `role`.
+6. transforme `ADMIN` en `ROLE_ADMIN`.
+7. autorise ou refuse la route.
 
 ### Etape 5 : refresh token
 
-Quand le token JWT expire, le client peut demander un nouveau couple access token + refresh token :
+Quand le token JWT expire, le client demande une nouvelle session. Le cookie `refresh_token` est envoye automatiquement :
 
 ```http
 POST /api/auth/refresh
 Content-Type: application/json
 ```
 
-Body :
-
-```json
-{
-  "refreshToken": "4b4e4d9a-7c87-4f76-86fd-3cfd5e9a15cf"
-}
-```
+Le body peut etre vide (`{}`). Le body historique avec `refreshToken` reste accepte uniquement pour compatibilite.
 
 Le refresh token est persiste dans la table `refresh_tokens`.
 
@@ -659,13 +661,7 @@ POST /api/auth/logout
 Content-Type: application/json
 ```
 
-Body :
-
-```json
-{
-  "refreshToken": "4b4e4d9a-7c87-4f76-86fd-3cfd5e9a15cf"
-}
-```
+Le body peut etre vide. Le backend lit le cookie, revoque le token en base, puis expire `access_token` et `refresh_token`.
 
 ## 10. Codes HTTP attendus
 
@@ -712,8 +708,9 @@ Body :
 
 ```http
 GET http://localhost:8182/api/patients
-Authorization: Bearer <token>
 ```
+
+Postman doit conserver les cookies recus pendant le login. Pour un test sans cookie jar, le header `Authorization: Bearer <token>` reste supporte.
 
 ### Test pagination
 
@@ -721,7 +718,6 @@ Les endpoints de liste acceptent maintenant :
 
 ```http
 GET http://localhost:8182/api/patients?page=0&size=10&sort=id,desc
-Authorization: Bearer <token>
 ```
 
 La reponse contient notamment :
@@ -768,7 +764,7 @@ Resultat attendu :
 - Le token JWT est genere seulement apres un login correct.
 - Le refresh token permet de regenerer un access token sans refaire le login.
 - Le backend ne stocke pas les sessions.
-- Chaque requete protegee doit envoyer `Authorization: Bearer <token>`.
+- Chaque requete Angular protegee doit utiliser `withCredentials: true` pour envoyer `access_token`.
 - Les mots de passe doivent etre stockes avec BCrypt, jamais en clair.
 - Le role est stocke dans le JWT avec le claim `role`.
 - Le backend convertit `ADMIN` en `ROLE_ADMIN` pour Spring Security.
@@ -783,3 +779,177 @@ Plus tard, tu peux ameliorer la security avec :
 - expiration plus courte du access token.
 - politique de mot de passe plus stricte.
 - roles plus fins par methode avec `@PreAuthorize`.
+
+## 14. Liaison Security Avec Le Frontend
+
+Le frontend Angular est documente dans :
+
+```text
+../nutricab-front/FRONTEND.md
+```
+
+Cette section explique comment la security backend est utilisee par Angular.
+
+### 14.1. Login Depuis Angular
+
+Flux complet :
+
+```text
+1. L'utilisateur ouvre /login.
+2. Angular appelle POST /api/auth/login.
+3. Le backend verifie email, mot de passe, active et role.
+4. Le backend genere un access token JWT et un refresh token.
+5. Le backend place les tokens dans des cookies HttpOnly.
+6. Angular stocke seulement authenticated, role et fullName dans sessionStorage.
+7. Angular redirige vers /patients ou vers returnUrl.
+```
+
+Les cookies HttpOnly ne sont pas lisibles par JavaScript. C'est voulu : cela limite l'exposition du JWT cote navigateur.
+
+`AuthResponse` ne contient donc que :
+
+```json
+{
+  "fullName": "Amine Bennani",
+  "role": "ADMIN"
+}
+```
+
+Angular n'utilise jamais `res.accessToken` et ne stocke aucun JWT dans le stockage web.
+
+### 14.2. Envoi Des Cookies
+
+Angular utilise un interceptor :
+
+```text
+src/app/core/interceptors/credentials.interceptor.ts
+```
+
+Son role est d'ajouter :
+
+```ts
+withCredentials: true
+```
+
+Sans cette option, le navigateur n'envoie pas les cookies au backend, et Spring Security ne peut pas authentifier la requete.
+
+### 14.3. Refresh Au Rechargement De Page
+
+Au refresh navigateur, `sessionStorage` peut ne pas suffire pour reconstruire l'etat complet.
+
+Le guard Angular fait donc :
+
+```text
+1. Si authenticated=true, il laisse passer.
+2. Sinon, il appelle POST /api/auth/refresh.
+3. Si le refresh token est valide, Angular restaure la session.
+4. Sinon, Angular redirige vers /login?returnUrl=...
+```
+
+Cela evite l'effet ou la page login apparait inutilement avant de revenir sur la page recente.
+
+Les guards sont des `CanActivateFn` et retournent un `UrlTree` en cas de refus. Ils ne lancent pas directement `router.navigate()`.
+
+Pendant le rendu SSR, le guard laisse le rendu initial continuer. Le refresh et les redirections d'authentification sont executes apres hydratation dans le navigateur, car le processus Node ne possede pas automatiquement les cookies HttpOnly du navigateur.
+
+### 14.4. Difference Entre Guard Front Et Security Back
+
+| Niveau | Fichier | Role |
+|---|---|---|
+| Frontend | `auth.guard.ts` | bloque les pages si l'utilisateur n'est pas connecte |
+| Frontend | `guest.guard.ts` | empeche un utilisateur connecte d'afficher `/login` |
+| Frontend | `admin.guard.ts` | bloque les pages `/users` si le role n'est pas `ADMIN` |
+| Backend | `SecurityConfig.java` | protege les endpoints REST |
+| Backend | `@PreAuthorize` | protege les methodes controller avec des regles metier |
+| Backend | `AuthorizationService` | verifie les droits fins selon les donnees |
+
+Le guard frontend ameliore l'experience utilisateur. Spring Security protege reellement les donnees.
+
+### 14.5. Exemple `403 Forbidden`
+
+Cas :
+
+```text
+POST http://localhost:8182/api/users
+```
+
+Regle backend :
+
+```text
+/api/users/** -> ADMIN
+```
+
+Si l'utilisateur connecte n'a pas le role `ADMIN`, le backend retourne :
+
+```text
+403 Forbidden
+```
+
+Ce comportement est normal. Il signifie que le token est reconnu, mais que le role est insuffisant.
+
+### 14.6. Exemple `401 Unauthorized`
+
+Un `401` arrive si :
+
+- aucun cookie `access_token` n'est envoye.
+- le token est expire.
+- le token est invalide.
+- le refresh token est invalide ou absent.
+
+Dans ce cas, Angular doit rediriger vers `/login`.
+
+### 14.7. Compte Admin Local
+
+Compte de test documente :
+
+```json
+{
+  "email": "amine.bennani@nutricab.ma",
+  "password": "AdminNutri2026!"
+}
+```
+
+Ce compte doit exister dans la table `users` avec :
+
+```text
+role = ADMIN
+active = true
+```
+
+Sinon, la connexion admin ne peut pas fonctionner et la creation d'autres utilisateurs restera bloquee.
+
+## 15. Refresh Global Cote Frontend
+
+Le frontend gere maintenant automatiquement certains `401 Unauthorized`.
+
+Fichier principal :
+
+```text
+../nutricab-front/src/app/core/interceptors/auth-refresh.interceptor.ts
+```
+
+Flux :
+
+1. une requete protegee retourne `401`.
+2. Angular appelle `POST /api/auth/refresh`.
+3. les nouveaux cookies sont poses par le backend.
+4. Angular rejoue la requete initiale.
+5. si le refresh echoue, Angular nettoie la session et redirige vers `/login`.
+
+Cet interceptor complete :
+
+```text
+../nutricab-front/src/app/core/interceptors/credentials.interceptor.ts
+```
+
+`credentials.interceptor.ts` envoie les cookies, tandis que `auth-refresh.interceptor.ts` gere le renouvellement de session quand l'access token expire.
+
+Protections supplementaires :
+
+- les endpoints login, refresh et logout sont exclus du retry automatique.
+- l'interceptor de refresh est inactif pendant le SSR.
+- `AuthService.refresh()` partage la requete en cours avec `shareReplay`.
+- une seule rotation du refresh token peut donc etre lancee a la fois dans le navigateur.
+- le `returnUrl` est conserve pour revenir a la page demandee apres reconnexion.
+- le role non sensible stocke dans `sessionStorage` permet d'afficher le menu admin avant l'hydratation, sans lire le cookie JWT HttpOnly.
+- `adminGuard` et `/api/users/**` restent obligatoires : la classe CSS de sidebar n'est qu'un traitement visuel.

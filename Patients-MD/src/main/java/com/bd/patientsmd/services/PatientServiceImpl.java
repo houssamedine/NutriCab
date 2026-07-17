@@ -26,7 +26,7 @@ public class PatientServiceImpl implements PatientService{
 
     @Override
     public PatientDto createPatient(CreatePatientRequest patientRequest) {
-        Users user = getUserIfPresent(patientRequest.userId());
+        Users user = resolvePatientUser(patientRequest.userId(), null);
 
         Patients patient = Patients.builder()
                 .fullName(patientRequest.fullName())
@@ -54,7 +54,7 @@ public class PatientServiceImpl implements PatientService{
         patient.setHeightCm(patientRequest.heightCm());
         patient.setInitialWeightKg(patientRequest.initialWeightKg());
         patient.setObjective(patientRequest.objective());
-        patient.setUser(getUserIfPresent(patientRequest.userId()));
+        patient.setUser(resolvePatientUser(patientRequest.userId(), patient.getUser()));
         patient.stampUpdated();
         return PatientMapper.toDto(patientRepository.saveAndFlush(patient));
     }
@@ -102,9 +102,15 @@ public class PatientServiceImpl implements PatientService{
                 .map(PatientMapper::toDto);
     }
 
-    private Users getUserIfPresent(Long userId) {
+    private Users resolvePatientUser(Long userId, Users currentUser) {
         if (userId == null) {
-            return null;
+            if (currentUserService.isNutritionist()) {
+                return currentUserService.getCurrentUserId()
+                        .flatMap(usersRepository::findById)
+                        .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable"));
+            }
+
+            return currentUser;
         }
 
         return usersRepository.findById(userId)

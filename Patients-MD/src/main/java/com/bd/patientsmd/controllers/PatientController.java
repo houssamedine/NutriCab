@@ -6,6 +6,7 @@ import com.bd.patientsmd.services.PatientService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,7 @@ public class PatientController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN') or @authorizationService.canCreatePatient(#patientRequest.userId())")
     public PatientDto createPatient(@P("patientRequest") @Valid @RequestBody CreatePatientRequest patientRequest){
         return patientService.createPatient(patientRequest);
@@ -48,6 +50,7 @@ public class PatientController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
     public void deletePatient(@P("id") @PathVariable Long id){
         patientService.deletePatient(id);

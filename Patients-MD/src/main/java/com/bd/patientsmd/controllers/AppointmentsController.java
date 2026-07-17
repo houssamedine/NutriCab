@@ -6,6 +6,7 @@ import com.bd.patientsmd.services.AppointmentService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ public class AppointmentsController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("@authorizationService.canCreateAppointment(#appointmentRequest.patientId())")
     public AppointmentDto createAppointment(@P("appointmentRequest") @Valid @RequestBody CreateAppointmentRequest appointmentRequest){
         return appointmentService.createAppointment(appointmentRequest);
@@ -54,6 +56,7 @@ public class AppointmentsController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("@authorizationService.canManageAppointment(#id)")
     public void deleteAppointment(@P("id") @PathVariable Long id){
         appointmentService.deleteAppointment(id);

@@ -7,6 +7,7 @@ import com.bd.patientsmd.services.ConsultationsService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class ConsultationsController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("@authorizationService.canCreateConsultation(#request.patientId())")
     public ConsultationsDto createConsultation(@P("request") @Valid @RequestBody CreateConsultationRequest request){
         return consultationsService.createConsultation(request);
@@ -51,6 +53,7 @@ public class ConsultationsController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("@authorizationService.canManageConsultation(#id)")
     public void deleteConsultation(@P("id") @PathVariable Long id){
         consultationsService.deleteConsultation(id);

@@ -1,5 +1,6 @@
 package com.bd.patientsmd.services;
 
+import com.bd.patientsmd.exceptions.DuplicateResourceException;
 import com.bd.patientsmd.exceptions.InvalidCredentialsException;
 import com.bd.patientsmd.exceptions.ResourceNotFoundException;
 import com.bd.patientsmd.models.dtos.PatientDto;
@@ -10,6 +11,7 @@ import com.bd.patientsmd.models.mappers.PatientMapper;
 import com.bd.patientsmd.models.mappers.UserMapper;
 import com.bd.patientsmd.models.requests.CreateUserRequest;
 import com.bd.patientsmd.models.requests.LoginRequest;
+import com.bd.patientsmd.models.requests.UpdateUserRequest;
 import com.bd.patientsmd.models.responses.AuthSession;
 import com.bd.patientsmd.repository.PatientRepository;
 import com.bd.patientsmd.repository.UsersRepository;
@@ -52,11 +54,14 @@ public class UsersServiceImpl implements UsersService{
 
     @Override
     public UsersDto createUser(CreateUserRequest request) {
-        if (usersRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email deja utilise");
+        String email = normalizeEmail(request.email());
+
+        if (usersRepository.existsByEmailIgnoreCase(email)) {
+            throw new DuplicateResourceException("Email deja utilise");
         }
 
         Users user = UserMapper.toEntity(request);
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.password()));
         user.stampCreated();
         return UserMapper.toDto(usersRepository.saveAndFlush(user));
@@ -76,18 +81,22 @@ public class UsersServiceImpl implements UsersService{
     }
 
     @Override
-    public UsersDto updateUser(Long id, CreateUserRequest request) {
+    public UsersDto updateUser(Long id, UpdateUserRequest request) {
         Users user = usersRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable"));
 
-        usersRepository.findByEmail(request.email())
+        String email = normalizeEmail(request.email());
+
+        usersRepository.findAllByEmailIgnoreCase(email)
+                .stream()
                 .filter(existingUser -> !existingUser.getId().equals(id))
+                .findFirst()
                 .ifPresent(existingUser -> {
-                    throw new IllegalArgumentException("Email deja utilise");
+                    throw new DuplicateResourceException("Email deja utilise");
                 });
 
         UserMapper.updateEntity(user, request);
-        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setEmail(email);
         user.stampUpdated();
         return UserMapper.toDto(usersRepository.saveAndFlush(user));
     }
@@ -124,8 +133,7 @@ public class UsersServiceImpl implements UsersService{
 
     @Override
     public AuthSession login(LoginRequest request) {
-        Users user = usersRepository.findByEmailIgnoreCase(request.email().trim())
-                .orElseThrow(() -> new InvalidCredentialsException("Email ou mot de passe incorrect"));
+        Users user = findUniqueUserByEmailForLogin(normalizeEmail(request.email()));
 
         if (loginChecksEnabled && !user.isActive()) {
             throw new IllegalArgumentException("Utilisateur désactive");
@@ -153,8 +161,7 @@ public class UsersServiceImpl implements UsersService{
 
     @Override
     public UsersDto getUserByEmail(String email) {
-        Users user = usersRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable"));
+        Users user = findUniqueUserByEmail(normalizeEmail(email));
         return UserMapper.toDto(user);
     }
 
@@ -204,6 +211,38 @@ public class UsersServiceImpl implements UsersService{
         user.setActive(!user.isActive());
         user.stampUpdated();
         return UserMapper.toDto(usersRepository.saveAndFlush(user));
+    }
+
+    private Users findUniqueUserByEmailForLogin(String email) {
+        List<Users> users = usersRepository.findAllByEmailIgnoreCase(email);
+
+        if (users.isEmpty()) {
+            throw new InvalidCredentialsException("Email ou mot de passe incorrect");
+        }
+
+        if (users.size() > 1) {
+            throw new IllegalArgumentException("Plusieurs comptes utilisent cet email. Corrigez les doublons dans la base de donnees.");
+        }
+
+        return users.get(0);
+    }
+
+    private Users findUniqueUserByEmail(String email) {
+        List<Users> users = usersRepository.findAllByEmailIgnoreCase(email);
+
+        if (users.isEmpty()) {
+            throw new ResourceNotFoundException("Utilisateur introuvable");
+        }
+
+        if (users.size() > 1) {
+            throw new IllegalArgumentException("Plusieurs comptes utilisent cet email. Corrigez les doublons dans la base de donnees.");
+        }
+
+        return users.get(0);
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase();
     }
     
 }
